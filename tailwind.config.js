@@ -1,9 +1,15 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: [],
+module.exports = {
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        gray: "#0e0f0b",
+        sandybrown: "#ffa558",
+      },
+      fontFamily: {
+        museomoderno: ['"MuseoModerno"', "sans-serif"],
+        "space-grotesk": ['"Space Grotesk"', "sans-serif"],
+      },
+    },
   },
-  plugins: [],
 }
-
