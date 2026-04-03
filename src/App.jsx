@@ -14,7 +14,7 @@ export default function App() {
     if (data && !user) {
       dispatch(setUser(data));
     }
-  }, [data]);
+  }, [data, user]);
 
   return <AppRoutes />;
 }

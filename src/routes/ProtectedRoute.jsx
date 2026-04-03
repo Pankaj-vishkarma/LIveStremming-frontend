@@ -4,17 +4,16 @@ import { useProfile } from "../hooks/useProfile";
 const ProtectedRoute = ({ children }) => {
     const { data, isLoading, isError } = useProfile();
 
-    // ⏳ show loader
+    // 🔥 silent wait (no UI, no flicker)
     if (isLoading) {
-        return <div>Loading...</div>;
+        return null;
     }
 
-    // ❌ Not logged in (401 case)
+    // ❌ not logged in
     if (isError || !data) {
         return <Navigate to="/" replace />;
     }
 
-    // ✅ Logged in
     return children;
 };
 

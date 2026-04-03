@@ -48,33 +48,36 @@ export default function Otp({ next, prev, data }) {
         mutationFn: verifyOtpAPI,
 
         onSuccess: async (res) => {
+            console.log("OTP RESPONSE:", res);
+
             if (!res?.success) return;
 
             const isNewUser = res?.data?.isNewUser;
 
             try {
-                // 🔥 fetch profile AFTER cookie set
-                const profileRes = await queryClient.fetchQuery({
-                    queryKey: ["profile"],
-                    queryFn: getProfile,
-                });
+                console.log("Fetching profile...");
 
-                const user = profileRes;
-
-                // ✅ redux sync
-                dispatch(setUser(user));
-
+                // ✅ direct API call (NO cache issue)
                 if (isNewUser) {
+                    console.log("NEW USER → onboarding");
+
+                    // 🔥 IMPORTANT: cache clear
                     queryClient.removeQueries(["profile"]);
+
                     next(res?.data);
                 } else {
+                    console.log("EXISTING USER → feed");
+
+                    const user = await getProfile();
+
+                    dispatch(setUser(user));
+                    queryClient.setQueryData(["profile"], user);
+
                     navigate("/feed", { replace: true });
                 }
 
             } catch (error) {
-                console.error("Profile fetch failed:", error);
-
-                alert("Login failed. Please try again.");
+                console.log("PROFILE ERROR:", error);
             }
         },
         onError: (err) => {

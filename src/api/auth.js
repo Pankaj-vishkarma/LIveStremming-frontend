@@ -9,7 +9,7 @@ export const sendOtpAPI = async (data) => {
 // ✅ VERIFY OTP
 export const verifyOtpAPI = async (data) => {
     const res = await axiosInstance.post("/auth/verify-otp", data);
-    return res.data;
+    return res;
 };
 
 // ✅ GET ME
