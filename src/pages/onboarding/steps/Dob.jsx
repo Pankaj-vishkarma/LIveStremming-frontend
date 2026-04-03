@@ -1,21 +1,77 @@
-import { useState } from "react"
+import { useState } from "react";
+import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 
-export default function Date({ next }) {
-    const [step, setStep] = useState("day")
-    const [selectedDay, setSelectedDay] = useState(null)
-    const [selectedMonth, setSelectedMonth] = useState(null)
-    const [selectedYear, setSelectedYear] = useState(null)
+export default function DobStep({ next }) {
+    const [step, setStep] = useState("day");
+    const [selectedDay, setSelectedDay] = useState(null);
+    const [selectedMonth, setSelectedMonth] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
+    const [error, setError] = useState("");
 
-    const days = Array.from({ length: 31 }, (_, i) => i + 1)
+    const { mutate, isPending } = useUpdateProfile();
+
+    const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
     const months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
-    ]
+    ];
 
-    const years = Array.from({ length: 20 }, (_, i) => 1990 + i)
+    const years = Array.from({ length: 50 }, (_, i) => 1970 + i);
 
-    const isComplete = selectedDay && selectedMonth && selectedYear
+    const isComplete = selectedDay && selectedMonth && selectedYear;
+
+    // ✅ AGE VALIDATION (18+)
+    const is18Plus = () => {
+        if (!isComplete) return false;
+
+        const monthIndex = months.indexOf(selectedMonth);
+        const dob = new Date(selectedYear, monthIndex, selectedDay);
+        const today = new Date();
+
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+
+        return age >= 18;
+    };
+
+    const handleSubmit = () => {
+        setError("");
+
+        if (!isComplete) {
+            setError("Please select complete date");
+            return;
+        }
+
+        if (!is18Plus()) {
+            setError("You must be at least 18 years old");
+            return;
+        }
+
+        const monthIndex = months.indexOf(selectedMonth) + 1;
+
+        const formattedDOB = `${selectedYear}-${String(monthIndex).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+
+        const payload = {
+            date_of_birth: formattedDOB,
+        };
+
+        mutate(payload, {
+            onSuccess: () => {
+                next(); // only after success
+            },
+            onError: (err) => {
+                setError(
+                    err?.response?.data?.message ||
+                    "Something went wrong. Please try again."
+                );
+            },
+        });
+    };
 
     return (
         <div className="w-[412px] mx-auto min-h-screen bg-[#0e0f0b] flex flex-col justify-between text-white">
@@ -23,14 +79,12 @@ export default function Date({ next }) {
             {/* TOP */}
             <div>
 
-                {/* TITLE */}
                 <div className="px-6 pt-6 font-museomoderno">
                     <h1 className="text-[28px] font-medium">
                         Date of Birth
                     </h1>
                 </div>
 
-                {/* ALERT */}
                 <div className="px-6 pt-4">
                     <div className="flex items-center gap-2 p-3 rounded-full bg-gradient-to-r from-[#ffbf7c33] to-transparent">
                         <img src="/alert-circle.png" className="w-5 h-5" />
@@ -40,12 +94,10 @@ export default function Date({ next }) {
                     </div>
                 </div>
 
-                {/* SUBTEXT */}
                 <div className="px-6 pt-4 text-[14px] text-gray-300">
                     Add your date of birth.
                 </div>
 
-                {/* INPUT */}
                 <div className="px-6 pt-4">
                     <input
                         value={
@@ -59,7 +111,13 @@ export default function Date({ next }) {
                     />
                 </div>
 
-                {/* TABS */}
+                {/* ❗ ERROR MESSAGE */}
+                {error && (
+                    <div className="px-6 pt-2 text-red-500 text-sm">
+                        {error}
+                    </div>
+                )}
+
                 <div className="px-6 pt-6 flex gap-3 text-[14px]">
 
                     <button
@@ -93,10 +151,8 @@ export default function Date({ next }) {
                     </button>
                 </div>
 
-                {/* CONTENT */}
                 <div className="px-6 pt-4">
 
-                    {/* DAY */}
                     {step === "day" && (
                         <div className="flex flex-wrap gap-2">
                             {days.map((d) => (
@@ -114,7 +170,6 @@ export default function Date({ next }) {
                         </div>
                     )}
 
-                    {/* MONTH */}
                     {step === "month" && (
                         <div className="flex flex-wrap gap-2">
                             {months.map((m) => (
@@ -132,10 +187,8 @@ export default function Date({ next }) {
                         </div>
                     )}
 
-                    {/* YEAR */}
                     {step === "year" && (
                         <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto no-scrollbar pr-1">
-
                             {years.map((y) => (
                                 <button
                                     key={y}
@@ -148,7 +201,6 @@ export default function Date({ next }) {
                                     {y}
                                 </button>
                             ))}
-
                         </div>
                     )}
 
@@ -156,20 +208,20 @@ export default function Date({ next }) {
 
             </div>
 
-            {/* BOTTOM BUTTON */}
+            {/* BOTTOM */}
             <div className="px-6 pb-6">
                 <button
-                    onClick={next}
-                    disabled={!isComplete}
+                    onClick={handleSubmit}
+                    disabled={!isComplete || isPending}
                     className={`w-full h-[50px] rounded-full font-semibold ${isComplete
                         ? "bg-[#e98834] text-black"
                         : "bg-[#3a2713] text-gray-500"
                         }`}
                 >
-                    Next
+                    {isPending ? "Saving..." : "Next"}
                 </button>
             </div>
 
         </div>
-    )
+    );
 }

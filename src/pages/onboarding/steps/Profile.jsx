@@ -1,19 +1,108 @@
-import { useState } from "react"
-import avatar from "../../../assets/avatar.png"
-import BottomSheet from "../../../components/ui/BottomSheet"
+import { useState, useEffect } from "react";
+import avatar from "../../../assets/avatar.png";
+import BottomSheet from "../../../components/ui/BottomSheet";
+import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
+import { useUploadImage } from "../../../hooks/useUploadImage";
 
 export default function Profile({ onFinish }) {
-    const [showSheet, setShowSheet] = useState(false)
+    const [showSheet, setShowSheet] = useState(false);
+    const [username, setUsername] = useState("");
+    const [image, setImage] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [error, setError] = useState("");
+
+    const { mutate: updateProfile, isPending } = useUpdateProfile();
+    const { mutateAsync: uploadImageMutation } = useUploadImage();
+
+    // ✅ CLEANUP (memory leak fix)
+    useEffect(() => {
+        return () => {
+            if (preview) {
+                URL.revokeObjectURL(preview);
+            }
+        };
+    }, [preview]);
+
+    // ==========================
+    // 📸 HANDLE IMAGE SELECT
+    // ==========================
+    const handleImageSelect = async (file) => {
+        try {
+            setError("");
+
+            if (!file) return;
+
+            // ✅ create preview URL
+            const localUrl = URL.createObjectURL(file);
+            setPreview(localUrl);
+
+            setImage(file);
+            setShowSheet(false);
+
+        } catch (err) {
+            setError("Failed to select image");
+        }
+    };
+
+    // ==========================
+    // 🚀 HANDLE SUBMIT
+    // ==========================
+    const handleSubmit = async () => {
+        try {
+            setError("");
+
+            if (!username.trim()) {
+                setError("Username is required");
+                return;
+            }
+
+            let uploadRes = null;
+
+            // 🔥 upload image (Cloudinary)
+            if (image) {
+                try {
+                    uploadRes = await uploadImageMutation(image);
+                } catch (err) {
+                    setError("Image upload failed");
+                    return;
+                }
+            }
+
+            // ✅ payload
+            const payload = {
+                username: username.trim(),
+            };
+
+            // ✅ add image data
+            if (uploadRes) {
+                payload.display_photo = uploadRes.url;
+                payload.display_photo_public_id = uploadRes.public_id;
+            }
+
+            // 🔥 update profile
+            updateProfile(payload, {
+                onSuccess: () => {
+                    onFinish(); // ✅ only after success
+                },
+                onError: (err) => {
+                    setError(
+                        err?.response?.data?.message ||
+                        "Failed to update profile"
+                    );
+                },
+            });
+
+        } catch (err) {
+            setError("Something went wrong");
+        }
+    };
 
     return (
         <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
-
             <div className="w-full max-w-[412px] min-h-screen px-6 pt-6 pb-6 flex flex-col text-white">
 
-                {/* TOP CONTENT */}
                 <div className="space-y-6">
 
-                    {/* HEADING */}
                     <div>
                         <h2 className="text-[26px] font-bold font-museomoderno">
                             <div>Make your first</div>
@@ -34,7 +123,7 @@ export default function Profile({ onFinish }) {
 
                         <div className="flex items-center gap-4">
                             <img
-                                src={avatar}
+                                src={preview || avatar}
                                 className="w-[58px] h-[58px] rounded-full object-cover"
                             />
 
@@ -55,18 +144,24 @@ export default function Profile({ onFinish }) {
                         </label>
 
                         <input
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             className="w-full mt-2 h-[48px] px-4 rounded-[10px] outline-none text-[14px]
                             bg-gradient-to-r from-[#1a1a1a] to-[#262626]"
-                            defaultValue="User-Ninja"
                         />
                     </div>
 
+                    {/* ERROR */}
+                    {error && (
+                        <div className="text-red-500 text-sm">
+                            {error}
+                        </div>
+                    )}
+
                 </div>
 
-                {/* PUSH SPACE */}
                 <div className="flex-1" />
 
-                {/* INFO BOX */}
                 <div className="mb-4 flex items-center gap-2 bg-gradient-to-r from-[#ffbf7c33] to-[#00000000] px-4 py-3 rounded-full text-[13px] text-[#d6d6d6] backdrop-blur-sm">
                     <img src="/alert-circle.png" className="w-5 h-5" />
                     <span>
@@ -74,20 +169,23 @@ export default function Profile({ onFinish }) {
                     </span>
                 </div>
 
-                {/* BUTTON */}
                 <button
-                    onClick={onFinish}
+                    onClick={handleSubmit}
+                    disabled={isPending}
                     className="w-full h-[50px] bg-[#e98834] rounded-full text-black text-[14px] font-semibold"
                 >
-                    Finish
+                    {isPending ? "Saving..." : "Finish"}
                 </button>
 
                 {/* SHEET */}
                 {showSheet && (
-                    <BottomSheet onClose={() => setShowSheet(false)} />
+                    <BottomSheet
+                        onClose={() => setShowSheet(false)}
+                        onSelect={handleImageSelect}
+                    />
                 )}
 
             </div>
         </div>
-    )
+    );
 }

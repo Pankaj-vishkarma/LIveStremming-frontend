@@ -1,46 +1,192 @@
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect } from "react";
+import { verifyOtpAPI, sendOtpAPI } from "@/api/auth";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/store/slices/authSlice";
+import { useSelector } from "react-redux";
+import { useQueryClient } from "@tanstack/react-query";
+import { getProfile } from "@/api/profile";
 
-export default function Otp({ next, prev }) {
-    const [otp, setOtp] = useState(["", "", "", ""])
-    const inputs = useRef([])
+export default function Otp({ next, prev, data }) {
+    const [otp, setOtp] = useState(["", "", "", ""]);
+    const [timer, setTimer] = useState(30);
+    const queryClient = useQueryClient();
 
+    const inputs = useRef([]);
+    const hasSubmitted = useRef(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const email = data?.email ?? "";
+
+    // ==========================
+    // INPUT HANDLING
+    // ==========================
     const handleChange = (value, index) => {
-        if (!/^[0-9]?$/.test(value)) return
+        if (!/^[0-9]?$/.test(value)) return;
 
-        const newOtp = [...otp]
-        newOtp[index] = value
-        setOtp(newOtp)
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
 
-        // move next input
         if (value && index < 3) {
-            inputs.current[index + 1].focus()
+            inputs.current[index + 1]?.focus();
         }
-    }
+    };
 
     const handleKeyDown = (e, index) => {
         if (e.key === "Backspace" && !otp[index] && index > 0) {
-            inputs.current[index - 1].focus()
+            inputs.current[index - 1]?.focus();
         }
-    }
+    };
 
-    // 🔥 AUTO SUBMIT WHEN OTP COMPLETE
+    // ==========================
+    // VERIFY OTP (React Query)
+    // ==========================
+    const verifyMutation = useMutation({
+        mutationFn: verifyOtpAPI,
+
+        onSuccess: async (res) => {
+            if (!res?.success) return;
+
+            const isNewUser = res?.data?.isNewUser;
+
+            try {
+                // 🔥 fetch profile AFTER cookie set
+                const profileRes = await queryClient.fetchQuery({
+                    queryKey: ["profile"],
+                    queryFn: getProfile,
+                });
+
+                const user = profileRes;
+
+                // ✅ redux sync
+                dispatch(setUser(user));
+
+                if (isNewUser) {
+                    queryClient.removeQueries(["profile"]);
+                    next(res?.data);
+                } else {
+                    navigate("/feed", { replace: true });
+                }
+
+            } catch (error) {
+                console.error("Profile fetch failed:", error);
+
+                alert("Login failed. Please try again.");
+            }
+        },
+        onError: (err) => {
+            console.error("OTP Verify Error:", err);
+
+            const message =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Invalid or expired OTP";
+
+            alert(message);
+
+            // reset
+            setOtp(["", "", "", ""]);
+            hasSubmitted.current = false;
+            inputs.current[0]?.focus();
+        },
+    });
+
+    const verifyOtp = () => {
+        if (verifyMutation.isPending || hasSubmitted.current) return;
+
+        const otpValue = otp.join("");
+
+        if (otpValue.length !== 4) return;
+
+        if (!email) {
+            alert("Email missing. Please restart flow.");
+            return;
+        }
+
+        hasSubmitted.current = true;
+
+        verifyMutation.mutate({
+            email,
+            otp: otpValue,
+        });
+    };
+
+    // ==========================
+    // AUTO SUBMIT
+    // ==========================
     useEffect(() => {
-        const isComplete = otp.every((digit) => digit !== "")
+        const isComplete = otp.every((digit) => digit !== "");
 
-        if (isComplete) {
-            setTimeout(() => {
-                next()
-            }, 300) // slight delay for UX
+        if (isComplete && !hasSubmitted.current) {
+            const timer = setTimeout(() => {
+                verifyOtp();
+            }, 300);
+
+            return () => clearTimeout(timer);
         }
-    }, [otp, next])
+    }, [otp]);
 
+    // ==========================
+    // TIMER
+    // ==========================
+    useEffect(() => {
+        if (timer === 0) return;
+
+        const interval = setInterval(() => {
+            setTimer((prev) => (prev > 0 ? prev - 1 : 0));
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timer]);
+
+
+    // ==========================
+    // RESEND OTP (React Query)
+    // ==========================
+    const resendMutation = useMutation({
+        mutationFn: sendOtpAPI,
+
+        onSuccess: (res) => {
+            if (!res?.success) return;
+
+            alert("OTP resent successfully");
+
+            // full reset
+            setOtp(["", "", "", ""]);
+            hasSubmitted.current = false;
+            inputs.current[0]?.focus();
+
+            setTimer(30);
+        },
+
+        onError: (err) => {
+            console.error("Resend Error:", err);
+
+            const message =
+                err?.response?.data?.message ||
+                "Failed to resend OTP";
+
+            alert(message);
+        },
+    });
+
+    const handleResend = () => {
+        if (timer > 0 || resendMutation.isPending || !email) return;
+
+        resendMutation.mutate({ email });
+    };
+
+    // ==========================
+    // UI (UNCHANGED)
+    // ==========================
     return (
         <div className="w-[412px] mx-auto min-h-screen bg-[#0e0f0b] flex flex-col justify-between">
 
-            {/* TOP SECTION */}
             <section className="flex-1 flex flex-col text-white font-museomoderno">
 
-                {/* HEADER */}
                 <div className="h-16 flex items-center px-6">
                     <button onClick={prev} className="flex items-end gap-[9px]">
                         <img src="/arrow-left.svg" className="w-6 h-6" />
@@ -50,21 +196,18 @@ export default function Otp({ next, prev }) {
                     </button>
                 </div>
 
-                {/* TITLE */}
                 <div className="px-6 pt-6">
                     <h1 className="text-[28px] font-medium">
                         Verification
                     </h1>
                 </div>
 
-                {/* TEXT */}
                 <div className="px-6 pt-1 font-inter">
                     <p className="text-[14px] font-medium">
-                        We sent a verification code to “aishwary@example.com”.
+                        We sent a verification code to “{email}”.
                     </p>
                 </div>
 
-                {/* ALERT */}
                 <div className="px-6 pt-6">
                     <div className="rounded-full bg-gradient-to-r from-[#ffbf7c33] to-[#99734a00] flex items-center justify-center p-3 gap-2.5">
                         <img src="/alert-circle.png" className="w-6 h-6" />
@@ -74,7 +217,6 @@ export default function Otp({ next, prev }) {
                     </div>
                 </div>
 
-                {/* OTP BOXES */}
                 <div className="px-6 pt-6">
                     <div className="flex gap-2.5 justify-center">
 
@@ -97,19 +239,25 @@ export default function Otp({ next, prev }) {
                     </div>
                 </div>
 
-                {/* RESEND */}
                 <div className="px-6 pt-6 flex items-center justify-center gap-2.5 font-inter">
-                    <button className="px-4 py-2 bg-[#e9883433] rounded-full text-[#919191] font-semibold text-[14px]">
-                        Resend Code
+                    <button
+                        onClick={handleResend}
+                        disabled={resendMutation.isPending || timer > 0}
+                        className={`px-4 py-2 rounded-full font-semibold text-[14px] 
+${timer > 0 || resendMutation.isPending
+                                ? "bg-[#e9883433] text-[#919191] cursor-not-allowed"
+                                : "bg-[#e98834] text-[#04080b] cursor-pointer"
+                            }`}
+                    >
+                        {resendMutation.isPending ? "Sending..." : "Resend Code"}
                     </button>
                     <span className="font-semibold text-[14px]">
-                        in 00:30
+                        in 00:{timer.toString().padStart(2, "0")}
                     </span>
                 </div>
 
             </section>
 
-            {/* FOOTER */}
             <footer className="px-6 pb-6 text-[14px] font-inter text-white">
                 <p>
                     By logging in you confirm you are above 18 years and accept our{" "}
@@ -124,5 +272,5 @@ export default function Otp({ next, prev }) {
             </footer>
 
         </div>
-    )
+    );
 }

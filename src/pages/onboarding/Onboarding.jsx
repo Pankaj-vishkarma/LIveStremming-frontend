@@ -10,9 +10,18 @@ import Profile from "./steps/Profile"
 
 export default function Onboarding() {
     const [step, setStep] = useState(0)
+    const [stepData, setStepData] = useState({})
+
     const navigate = useNavigate()
 
-    const next = () => setStep((prev) => prev + 1)
+    const next = (data = {}) => {
+        setStepData((prev) => ({
+            ...prev,
+            ...data,
+        }))
+
+        setStep((prev) => prev + 1)
+    }
 
     const prev = () => setStep((prev) => prev - 1)
 
@@ -25,7 +34,9 @@ export default function Onboarding() {
             {step === 0 && <Splash next={next} />}
             {step === 1 && <Welcome next={next} />}
             {step === 2 && <Email next={next} prev={prev} />}
-            {step === 3 && <Otp next={next} prev={prev} />}
+
+            {step === 3 && <Otp next={next} prev={prev} data={stepData} />}
+
             {step === 4 && <Dob next={next} />}
             {step === 5 && <Profile onFinish={finish} />}
         </div>
