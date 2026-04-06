@@ -1,20 +1,28 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import AppRoutes from "./routes/AppRoutes";
-import { useProfile } from "./hooks/useProfile";
-import { setUser } from "./store/slices/authSlice";
+import { setUser, clearUser } from "./store/slices/authSlice";
+import { useQuery } from "@tanstack/react-query";
+import { getProfile } from "./api/profile";
 
 export default function App() {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
 
-  const { data } = useProfile();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+    retry: false,
+  });
 
   useEffect(() => {
-    if (data && !user) {
+    if (isLoading) return;
+
+    if (data) {
       dispatch(setUser(data));
+    } else if (isError) {
+      dispatch(clearUser());
     }
-  }, [data, user]);
+  }, [data, isLoading, isError, dispatch]);
 
   return <AppRoutes />;
 }

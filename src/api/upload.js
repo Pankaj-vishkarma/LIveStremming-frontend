@@ -11,14 +11,13 @@ export const uploadImage = async (file) => {
             },
         });
 
-        // ✅ IMPORTANT: return both values
+        // FIXED
         return {
             url: res.url,
             public_id: res.public_id,
         };
 
     } catch (error) {
-        // ✅ clean error handling
         throw error?.response?.data || error;
     }
 };
