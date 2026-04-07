@@ -27,6 +27,10 @@ const Profile = () => {
     });
 
     const [uploading, setUploading] = useState(false);
+    const [bioError, setBioError] = useState("");
+
+    //  local preview state (IMPORTANT FIX)
+    const [localImage, setLocalImage] = useState(null);
 
     const handleEdit = () => {
         setFormData({
@@ -37,30 +41,123 @@ const Profile = () => {
     };
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+
+        // BIO VALIDATION (live)
+        if (name === "about_me") {
+            const trimmed = value.trim();
+
+            // Empty
+            if (!trimmed) {
+                setBioError("Bio cannot be empty");
+                return;
+            }
+
+            // Length
+            if (trimmed.length < 3) {
+                setBioError("Bio must be at least 3 characters");
+                return;
+            }
+
+            if (trimmed.length > 150) {
+                setBioError("Bio cannot exceed 150 characters");
+                return;
+            }
+
+            // Only numbers
+            if (/^\d+$/.test(trimmed)) {
+                setBioError("Bio cannot contain only numbers");
+                return;
+            }
+
+            //  No meaningful words (like random string)
+            if (!/[a-zA-Z]{2,}/.test(trimmed)) {
+                setBioError("Please enter a meaningful bio");
+                return;
+            }
+
+            //  Repeated characters (aaaaaa, jjjjj)
+            if (/(.)\1{4,}/.test(trimmed)) {
+                setBioError("Bio cannot contain repeated characters");
+                return;
+            }
+
+            //  Too many special characters
+            if (/[^a-zA-Z0-9\s.,!?'-]/.test(trimmed)) {
+                setBioError("Bio contains invalid characters");
+                return;
+            }
+
+            setBioError("");
+        }
     };
 
     const handleSave = async () => {
         try {
-            await updateProfile(formData);
+            const trimmedBio = formData.about_me.trim();
+
+            // Same validations again (important)
+
+            if (!trimmedBio) {
+                setBioError("Bio cannot be empty");
+                return;
+            }
+
+            if (trimmedBio.length < 3) {
+                setBioError("Bio must be at least 3 characters");
+                return;
+            }
+
+            if (trimmedBio.length > 150) {
+                setBioError("Bio cannot exceed 150 characters");
+                return;
+            }
+
+            if (/^\d+$/.test(trimmedBio)) {
+                setBioError("Bio cannot contain only numbers");
+                return;
+            }
+
+            if (!/[a-zA-Z]{2,}/.test(trimmedBio)) {
+                setBioError("Please enter a meaningful bio");
+                return;
+            }
+
+            if (/(.)\1{4,}/.test(trimmedBio)) {
+                setBioError("Bio cannot contain repeated characters");
+                return;
+            }
+
+            if (/[^a-zA-Z0-9\s.,!?'-]/.test(trimmedBio)) {
+                setBioError("Bio contains invalid characters");
+                return;
+            }
+            await updateProfile({
+                ...formData,
+                about_me: trimmedBio
+            });
+
             queryClient.invalidateQueries(["profile"]);
             setIsEditing(false);
+            setBioError("");
+
         } catch (error) {
             console.error("Update profile error:", error);
         }
     };
 
-    //  AVATAR CLICK LOGIC
     const handleAvatarClick = () => {
         if (!isEditing) {
-            setShowAvatarModal(true); // popup open
+            setShowAvatarModal(true);
         }
     };
 
-    //  AVATAR UPLOAD (ONLY IN EDIT MODE)
+    // FIXED AVATAR UPLOAD
     const handleAvatarChange = async (e) => {
         if (!isEditing) return;
 
@@ -70,11 +167,31 @@ const Profile = () => {
         try {
             setUploading(true);
 
+            // INSTANT PREVIEW (mobile fix)
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLocalImage(reader.result);
+            };
+            reader.readAsDataURL(file);
+
             const uploadRes = await uploadImage(file);
             const imageUrl = uploadRes.url;
 
             await updateProfile({
                 display_photo: imageUrl,
+            });
+
+            // CACHE UPDATE (instant UI update)
+            queryClient.setQueryData(["profile"], (oldData) => {
+                if (!oldData) return oldData;
+
+                return {
+                    ...oldData,
+                    data: {
+                        ...oldData.data,
+                        display_photo: imageUrl,
+                    },
+                };
             });
 
             queryClient.invalidateQueries(["profile"]);
@@ -86,7 +203,6 @@ const Profile = () => {
         }
     };
 
-    //  LOGOUT WITH BACKEND
     const handleLogout = async () => {
         try {
             await axios.post("/auth/logout");
@@ -111,14 +227,13 @@ const Profile = () => {
         <>
             <div className="px-4 pt-4 pb-28 space-y-5">
 
-                {/* USER INFO */}
                 <div className="flex items-center gap-4">
 
-                    {/* AVATAR */}
                     <div className="relative">
 
                         <img
-                            src={user?.display_photo || avatarFallback}
+                            // FIX: local preview first
+                            src={localImage || user?.display_photo || avatarFallback}
                             className="w-20 h-20 rounded-full object-cover cursor-pointer"
                             onClick={handleAvatarClick}
                         />
@@ -139,7 +254,6 @@ const Profile = () => {
                         )}
                     </div>
 
-                    {/* USER TEXT */}
                     <div>
                         {isEditing ? (
                             <input
@@ -161,17 +275,25 @@ const Profile = () => {
 
                 </div>
 
-                {/* ABOUT */}
                 <div className="bg-[#1a1a1a] rounded-xl p-3">
                     <p className="text-xs text-gray-400 mb-1">About</p>
 
                     {isEditing ? (
-                        <textarea
-                            name="about_me"
-                            value={formData.about_me}
-                            onChange={handleChange}
-                            className="w-full bg-[#0e0f0b] text-white text-sm p-2 rounded"
-                        />
+                        <>
+                            <textarea
+                                name="about_me"
+                                value={formData.about_me}
+                                onChange={handleChange}
+                                className="w-full bg-[#0e0f0b] text-white text-sm p-2 rounded"
+                            />
+
+                            {/* ERROR */}
+                            {bioError && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {bioError}
+                                </p>
+                            )}
+                        </>
                     ) : (
                         <p className="text-sm text-white">
                             {user?.about_me || "No bio added"}
@@ -179,7 +301,6 @@ const Profile = () => {
                     )}
                 </div>
 
-                {/* STATS */}
                 <div className="flex justify-between text-center">
                     <div>
                         <p className="text-white text-sm font-semibold">120</p>
@@ -195,7 +316,6 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* ACTION BUTTONS */}
                 <div className="flex gap-3">
                     {isEditing ? (
                         <>
@@ -222,14 +342,13 @@ const Profile = () => {
 
             </div>
 
-            {/* AVATAR POPUP */}
             {showAvatarModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
 
                     <div className="relative">
 
                         <img
-                            src={user?.display_photo || avatarFallback}
+                            src={localImage || user?.display_photo || avatarFallback}
                             className="w-64 h-64 object-cover rounded-xl"
                         />
 
