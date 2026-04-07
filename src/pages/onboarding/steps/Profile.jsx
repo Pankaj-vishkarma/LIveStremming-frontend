@@ -115,7 +115,7 @@ export default function Profile({ onFinish }) {
                     </div>
 
                     {/* AVATAR */}
-                    <div className="space-y-3 pt-[32px] pb-[32px]">
+                    <div className="space-y-3 pt-[0px] pb-[0px]">
                         <p className="text-[14px] font-medium font-inter">
                             <span className="text-[#FFFFFF]">Avatar </span>
                             <span className="text-[#9B7452]">(Profile Pic)</span>

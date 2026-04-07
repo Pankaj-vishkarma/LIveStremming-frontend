@@ -240,7 +240,7 @@ ${timer > 0 || resendMutation.isPending
 
                 </section>
 
-                <footer className="px-4 sm:px-6 pb-6 text-[12px] sm:text-[14px] font-inter text-white">
+                <footer className="px-3 sm:px-6 pb-6 text-[12px] sm:text-[14px] font-inter text-white">
                     <p className="leading-relaxed">
                         By logging in you confirm you are above 18 years and accept our{" "}
                         <span className="underline text-[#ffa312]">

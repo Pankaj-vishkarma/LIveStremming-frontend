@@ -112,7 +112,7 @@ export default function DobStep({ next }) {
                             }
                             placeholder="Enter DOB"
                             readOnly
-                            className="w-full h-[44px] sm:h-[48px] bg-[#1a1a1a] rounded-[10px] px-3 sm:px-4 outline-none text-gray-400 text-sm"
+                            className="full w-full h-[44px] px-6 sm:h-[48px] rounded-[10px] bg-[#1a1a1a] text-sm sm:text-base font-inter cursor-pointer"
                         />
 
                         {error && (
@@ -123,7 +123,7 @@ export default function DobStep({ next }) {
 
                     <div className="flex flex-col gap-[14px] mb-[25px]">
                         {/* STEP BUTTONS (FIXED) */}
-                        <div className="flex justify-between gap-2 text-[12px] sm:text-[14px] UP w-[56%]">
+                        <div className="flex justify-between gap-2 text-[12px] sm:text-[14px] UP w-[56%] font-inter">
                             {["day", "month", "year"].map((s) => (
                                 <button
                                     key={s}
@@ -148,7 +148,7 @@ export default function DobStep({ next }) {
                                         <button
                                             key={d}
                                             onClick={() => setSelectedDay(d)}
-                                            className={`aspect-square rounded-full text-xs sm:text-sm
+                                            className={`aspect-square rounded-full text-xs sm:text-sm font-inter
                                         ${selectedDay === d
                                                     ? "bg-[#e98834] text-white"
                                                     : "bg-[#1a1a1a]"
@@ -166,7 +166,7 @@ export default function DobStep({ next }) {
                                         <button
                                             key={m}
                                             onClick={() => setSelectedMonth(m)}
-                                            className={`h-[36px] sm:h-[40px] text-xs sm:text-sm rounded-full
+                                            className={`h-[36px] sm:h-[40px] text-xs sm:text-sm rounded-full font-inter
                                         ${selectedMonth === m
                                                     ? "bg-[#e98834] text-black"
                                                     : "bg-[#1a1a1a]"
@@ -179,12 +179,12 @@ export default function DobStep({ next }) {
                             )}
 
                             {step === "year" && (
-                                <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto no-scrollbar">
+                                <div className="grid grid-cols-4 gap-2 max-h-[250px] overflow-y-auto no-scrollbar">
                                     {years.map((y) => (
                                         <button
                                             key={y}
                                             onClick={() => setSelectedYear(y)}
-                                            className={`h-[36px] sm:h-[40px] text-xs sm:text-sm rounded-full
+                                            className={`h-[36px] sm:h-[40px] text-xs sm:text-sm rounded-full font-inter
                                         ${selectedYear === y
                                                     ? "bg-[#e98834] text-black"
                                                     : "bg-[#1a1a1a]"
