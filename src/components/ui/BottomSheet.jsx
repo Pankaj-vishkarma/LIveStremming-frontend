@@ -1,5 +1,4 @@
-import { useRef, useState } from "react";
-import { useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export default function BottomSheet({ onClose, onSelect }) {
     const fileInputRef = useRef(null);
@@ -16,9 +15,6 @@ export default function BottomSheet({ onClose, onSelect }) {
         }
     }, [isCameraOpen, stream]);
 
-    // ==========================
-    // GALLERY
-    // ==========================
     const handleGalleryClick = () => {
         try {
             setError("");
@@ -49,9 +45,6 @@ export default function BottomSheet({ onClose, onSelect }) {
         }
     };
 
-    // ==========================
-    // CAMERA OPEN (ALL DEVICES)
-    // ==========================
     const handleCameraClick = async () => {
         try {
             setError("");
@@ -66,8 +59,6 @@ export default function BottomSheet({ onClose, onSelect }) {
 
         } catch (err) {
             console.error("Camera Error:", err);
-
-            // ONLY fallback on REAL failure
             setError("Unable to access camera, opening gallery...");
 
             setTimeout(() => {
@@ -76,9 +67,6 @@ export default function BottomSheet({ onClose, onSelect }) {
         }
     };
 
-    // ==========================
-    // CAPTURE PHOTO
-    // ==========================
     const handleCapture = () => {
         try {
             const video = videoRef.current;
@@ -102,9 +90,7 @@ export default function BottomSheet({ onClose, onSelect }) {
 
                 onSelect && onSelect(file);
 
-                // stop camera
                 stream?.getTracks().forEach((track) => track.stop());
-
                 setIsCameraOpen(false);
             }, "image/jpeg");
 
@@ -114,63 +100,59 @@ export default function BottomSheet({ onClose, onSelect }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end justify-center">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end justify-center px-2 sm:px-4">
 
-            <div className="w-full max-w-[412px] bg-[#1a1a1a] rounded-t-[20px] px-5 pt-5 pb-6 space-y-5">
+            <div className="w-full max-w-[412px] bg-[#1a1a1a] rounded-t-[18px] sm:rounded-t-[20px] px-4 sm:px-5 pt-4 sm:pt-5 pb-5 sm:pb-6 space-y-4 sm:space-y-5">
 
-                <h3 className="text-[16px] font-semibold text-white">
+                <h3 className="text-[14px] sm:text-[16px] font-semibold text-white">
                     Change Image
                 </h3>
 
                 {!isCameraOpen && (
-                    <>
-                        <div className="flex gap-4">
+                    <div className="flex gap-3 sm:gap-4">
 
-                            {/* CAMERA */}
-                            <button
-                                onClick={handleCameraClick}
-                                className="flex-1 h-[80px] bg-[#2a2a2a] rounded-xl flex flex-col items-center justify-center gap-2 text-[13px] text-[#B99C74]"
-                            >
-                                <img src="/camera.png" className="w-5 h-5" />
-                                Take Selfie
-                            </button>
+                        <button
+                            onClick={handleCameraClick}
+                            className="flex-1 h-[70px] sm:h-[80px] bg-[#2a2a2a] rounded-lg sm:rounded-xl flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-[12px] sm:text-[13px] text-[#B99C74]"
+                        >
+                            <img src="/camera.png" className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Take Selfie
+                        </button>
 
-                            {/* GALLERY */}
-                            <button
-                                onClick={handleGalleryClick}
-                                className="flex-1 h-[80px] bg-[#2a2a2a] rounded-xl flex flex-col items-center justify-center gap-2 text-[13px] text-[#B99C74]"
-                            >
-                                <img src="/gallery.png" className="w-5 h-5" />
-                                Upload From Gallery
-                            </button>
+                        <button
+                            onClick={handleGalleryClick}
+                            className="flex-1 h-[70px] sm:h-[80px] bg-[#2a2a2a] rounded-lg sm:rounded-xl flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-[12px] sm:text-[13px] text-[#B99C74]"
+                        >
+                            <img src="/gallery.png" className="w-4 h-4 sm:w-5 sm:h-5" />
+                            Upload From Gallery
+                        </button>
 
-                        </div>
-                    </>
+                    </div>
                 )}
 
-                {/* CAMERA VIEW */}
                 {isCameraOpen && (
-                    <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4">
+
                         <video
                             ref={videoRef}
                             autoPlay
                             playsInline
                             muted
-                            className="w-full rounded-lg"
+                            className="w-full max-h-[300px] sm:max-h-[350px] rounded-lg object-cover"
                         />
 
                         <button
                             onClick={handleCapture}
-                            className="bg-[#e98834] px-5 py-2 rounded-full text-black"
+                            className="bg-[#e98834] px-4 sm:px-5 py-2 rounded-full text-black text-sm sm:text-base"
                         >
                             Capture
                         </button>
+
                     </div>
                 )}
 
-                {/* ERROR */}
                 {error && (
-                    <div className="text-red-500 text-sm">
+                    <div className="text-red-500 text-xs sm:text-sm">
                         {error}
                     </div>
                 )}
@@ -180,12 +162,11 @@ export default function BottomSheet({ onClose, onSelect }) {
                         stream?.getTracks().forEach((t) => t.stop());
                         onClose();
                     }}
-                    className="w-full text-center text-[#cfcfcf] text-[14px]"
+                    className="w-full text-center text-[#cfcfcf] text-[13px] sm:text-[14px]"
                 >
                     Cancel
                 </button>
 
-                {/* HIDDEN INPUT */}
                 <input
                     type="file"
                     accept="image/*"
@@ -194,8 +175,7 @@ export default function BottomSheet({ onClose, onSelect }) {
                     hidden
                 />
 
-                {/* CANVAS (hidden) */}
-                <canvas ref={canvasRef} style={{ display: "none" }} />
+                <canvas ref={canvasRef} className="hidden" />
 
             </div>
         </div>
