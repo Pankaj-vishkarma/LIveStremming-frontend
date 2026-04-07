@@ -21,7 +21,6 @@ export default function DobStep({ next }) {
 
     const isComplete = selectedDay && selectedMonth && selectedYear;
 
-    // AGE VALIDATION (UNCHANGED)
     const is18Plus = () => {
         if (!isComplete) return false;
 
@@ -56,24 +55,16 @@ export default function DobStep({ next }) {
 
         const formattedDOB = `${selectedYear}-${String(monthIndex).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
 
-        const payload = {
-            date_of_birth: formattedDOB,
-        };
-
-        mutate(payload, {
-            onSuccess: () => {
-                next();
-            },
-            onError: (err) => {
-                setError(
-                    err?.response?.data?.message ||
-                    "Something went wrong. Please try again."
-                );
-            },
-        });
+        mutate(
+            { date_of_birth: formattedDOB },
+            {
+                onSuccess: () => next(),
+                onError: (err) =>
+                    setError(err?.response?.data?.message || "Something went wrong"),
+            }
+        );
     };
 
-    // NEW FLOW HANDLER (IMPORTANT)
     const handleNextStep = () => {
         if (step === "day") {
             if (!selectedDay) return setError("Please select day");
@@ -91,31 +82,28 @@ export default function DobStep({ next }) {
     return (
         <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
 
-            <div className="w-full max-w-[412px] min-h-screen flex flex-col justify-between text-white">
+            <div className="w-full max-w-[412px] min-h-screen flex flex-col justify-between text-white px-4 sm:px-6 py-4">
 
                 {/* TOP */}
-                <div>
+                <div className="flex flex-col justify-between h-full ">
 
-                    <div className="px-4 sm:px-6 pt-6 font-museomoderno">
-                        <h1 className="text-[24px] sm:text-[28px] font-medium">
+                    <div className="space-y-4">
+
+                        <h1 className="text-[22px] sm:text-[26px] font-medium font-museomoderno">
                             Date of Birth
                         </h1>
-                    </div>
 
-                    <div className="px-4 sm:px-6 pt-4">
-                        <div className="flex items-center gap-2 p-3 rounded-full bg-gradient-to-r from-[#ffbf7c33] to-transparent">
-                            <img src="/alert-circle.png" className="w-5 h-5" />
-                            <span className="text-[12px] sm:text-[14px] text-gray-300">
+                        <div className="flex items-center gap-2 p-2 sm:p-3 rounded-full bg-gradient-to-r from-[#ffbf7c33] to-transparent">
+                            <img src="/alert-circle.png" className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="text-[11px] sm:text-[13px] text-gray-300">
                                 Don’t worry your Date of birth will be private
                             </span>
                         </div>
-                    </div>
 
-                    <div className="px-4 sm:px-6 pt-4 text-[13px] sm:text-[14px] text-gray-300">
-                        Add your date of birth.
-                    </div>
+                        <p className="text-[12px] sm:text-[13px] text-gray-300">
+                            Add your date of birth.
+                        </p>
 
-                    <div className="px-4 sm:px-6 pt-4">
                         <input
                             value={
                                 selectedDay && selectedMonth && selectedYear
@@ -124,118 +112,115 @@ export default function DobStep({ next }) {
                             }
                             placeholder="Enter DOB"
                             readOnly
-                            className="w-full h-[45px] sm:h-[50px] bg-[#1a1a1a] rounded-[10px] px-4 outline-none text-gray-400"
+                            className="w-full h-[44px] sm:h-[48px] bg-[#1a1a1a] rounded-[10px] px-3 sm:px-4 outline-none text-gray-400 text-sm"
                         />
+
+                        {error && (
+                            <p className="text-red-500 text-xs">{error}</p>
+                        )}
+
                     </div>
 
-                    {error && (
-                        <div className="px-4 sm:px-6 pt-2 text-red-500 text-sm">
-                            {error}
+                    <div className="flex flex-col gap-[14px] mb-[25px]">
+                        {/* STEP BUTTONS (FIXED) */}
+                        <div className="flex justify-between gap-2 text-[12px] sm:text-[14px] UP w-[56%]">
+                            {["day", "month", "year"].map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setStep(s)}
+                                    className={`flex-1 h-[32px] sm:h-[36px] rounded-full capitalize
+                                ${step === s
+                                            ? "bg-[#361900] text-white"
+                                            : "bg-[#1a1a1a] text-white"
+                                        }`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
                         </div>
-                    )}
 
-                    {/* STEP BUTTONS */}
-                    <div className="px-4 sm:px-6 pt-6 flex flex-wrap gap-2 text-[13px] sm:text-[14px]">
-                        {["day", "month", "year"].map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => setStep(s)}
-                                className={`px-4 py-2 rounded-full capitalize ${step === s
-                                    ? "bg-[#e98834] text-black"
-                                    : "bg-transparent text-white"
-                                    }`}
-                            >
-                                {s}
-                            </button>
-                        ))}
-                    </div>
+                        {/* CONTENT */}
+                        <div className="LP h-[250px]">
 
-                    <div className="px-4 sm:px-6 pt-4">
-
-                        {/* DAY */}
-                        {step === "day" && (
-                            <div className="grid grid-cols-7 gap-2">
-                                {days.map((d) => (
-                                    <button
-                                        key={d}
-                                        onClick={() => setSelectedDay(d)}
-                                        className={`aspect-square rounded-full flex items-center justify-center text-[12px] sm:text-[14px]
+                            {step === "day" && (
+                                <div className="grid grid-cols-7 gap-2">
+                                    {days.map((d) => (
+                                        <button
+                                            key={d}
+                                            onClick={() => setSelectedDay(d)}
+                                            className={`aspect-square rounded-full text-xs sm:text-sm
                                         ${selectedDay === d
-                                                ? "bg-[#e98834] text-black"
-                                                : "bg-[#1a1a1a] text-white"
-                                            }`}
-                                    >
-                                        {d}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                                                    ? "bg-[#e98834] text-white"
+                                                    : "bg-[#1a1a1a]"
+                                                }`}
+                                        >
+                                            {d}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
-                        {/* MONTH */}
-                        {step === "month" && (
-                            <div className="grid grid-cols-4 gap-2 px-1 sm:px-2">
-                                {months.map((m) => (
-                                    <button
-                                        key={m}
-                                        onClick={() => setSelectedMonth(m)}
-                                        className={`h-[38px] sm:h-[42px] text-[11px] sm:text-[13px] rounded-full flex items-center justify-center
+                            {step === "month" && (
+                                <div className="grid grid-cols-4 gap-2">
+                                    {months.map((m) => (
+                                        <button
+                                            key={m}
+                                            onClick={() => setSelectedMonth(m)}
+                                            className={`h-[36px] sm:h-[40px] text-xs sm:text-sm rounded-full
                                         ${selectedMonth === m
-                                                ? "bg-[#e98834] text-black"
-                                                : "bg-[#1a1a1a] text-white"
-                                            }`}
-                                    >
-                                        {m}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                                                    ? "bg-[#e98834] text-black"
+                                                    : "bg-[#1a1a1a]"
+                                                }`}
+                                        >
+                                            {m}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
-                        {/* YEAR */}
-                        {step === "year" && (
-                            <div className="grid grid-cols-4 gap-2 max-h-[220px] overflow-y-auto no-scrollbar pr-1">
-                                {years.map((y) => (
-                                    <button
-                                        key={y}
-                                        onClick={() => setSelectedYear(y)}
-                                        className={`h-[38px] sm:h-[40px] text-[12px] sm:text-[13px] rounded-full flex items-center justify-center
+                            {step === "year" && (
+                                <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto no-scrollbar">
+                                    {years.map((y) => (
+                                        <button
+                                            key={y}
+                                            onClick={() => setSelectedYear(y)}
+                                            className={`h-[36px] sm:h-[40px] text-xs sm:text-sm rounded-full
                                         ${selectedYear === y
-                                                ? "bg-[#e98834] text-black"
-                                                : "bg-[#1a1a1a] text-white"
-                                            }`}
-                                    >
-                                        {y}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                                                    ? "bg-[#e98834] text-black"
+                                                    : "bg-[#1a1a1a]"
+                                                }`}
+                                        >
+                                            {y}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                {/* BOTTOM BUTTON */}
-                <div className="px-4 sm:px-6 pb-6">
-                    <button
-                        onClick={handleNextStep}
-                        disabled={
-                            isPending ||
-                            (step === "day" && !selectedDay) ||
+                {/* BUTTON */}
+                <button
+                    onClick={handleNextStep}
+                    disabled={
+                        isPending ||
+                        (step === "day" && !selectedDay) ||
+                        (step === "month" && !selectedMonth) ||
+                        (step === "year" && !selectedYear)
+                    }
+                    className={`w-full h-[44px] sm:h-[48px] rounded-full font-inter text-sm
+                    ${(step === "day" && !selectedDay) ||
                             (step === "month" && !selectedMonth) ||
                             (step === "year" && !selectedYear)
-                        }
-                        className={`w-full h-[45px] sm:h-[50px] rounded-full font-semibold 
-                        ${(step === "day" && !selectedDay) ||
-                                (step === "month" && !selectedMonth) ||
-                                (step === "year" && !selectedYear)
-                                ? "bg-[#3a2713] text-gray-500"
-                                : "bg-[#e98834] text-black"
-                            }`}
-                    >
-                        {step === "year"
-                            ? (isPending ? "Saving..." : "Submit")
-                            : "Next"}
-                    </button>
-                </div>
+                            ? "bg-[#3a2713] text-gray-500"
+                            : "bg-[#e98834] text-black"
+                        }`}
+                >
+                    {step === "year" ? (isPending ? "Saving..." : "Submit") : "Next"}
+                </button>
 
             </div>
         </div>
