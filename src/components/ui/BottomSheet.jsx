@@ -56,10 +56,6 @@ export default function BottomSheet({ onClose, onSelect }) {
         try {
             setError("");
 
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error("Camera not supported");
-            }
-
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: "user" },
                 audio: false,
@@ -68,12 +64,11 @@ export default function BottomSheet({ onClose, onSelect }) {
             setStream(mediaStream);
             setIsCameraOpen(true);
 
-            // ❗ DO NOT attach here
-
         } catch (err) {
             console.error("Camera Error:", err);
 
-            setError("Camera not supported, opening gallery...");
+            // ONLY fallback on REAL failure
+            setError("Unable to access camera, opening gallery...");
 
             setTimeout(() => {
                 fileInputRef.current?.click();

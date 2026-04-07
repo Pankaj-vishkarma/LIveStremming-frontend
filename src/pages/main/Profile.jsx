@@ -101,8 +101,7 @@ const Profile = () => {
         try {
             const trimmedBio = formData.about_me.trim();
 
-            // Same validations again (important)
-
+            // VALIDATION (same as before)
             if (!trimmedBio) {
                 setBioError("Bio cannot be empty");
                 return;
@@ -137,17 +136,37 @@ const Profile = () => {
                 setBioError("Bio contains invalid characters");
                 return;
             }
-            await updateProfile({
-                ...formData,
-                about_me: trimmedBio
+
+            // 1. OPTIMISTIC UPDATE (instant UI)
+            queryClient.setQueryData(["profile"], (oldData) => {
+                if (!oldData) return oldData;
+
+                return {
+                    ...oldData,
+                    data: {
+                        ...oldData.data,
+                        about_me: trimmedBio,
+                    },
+                };
             });
 
+            // 2. API CALL
+            await updateProfile({
+                ...formData,
+                about_me: trimmedBio,
+            });
+
+            // 3. BACKGROUND SYNC
             queryClient.invalidateQueries(["profile"]);
+
             setIsEditing(false);
             setBioError("");
 
         } catch (error) {
             console.error("Update profile error:", error);
+
+            // ❗ rollback (optional but pro level)
+            queryClient.invalidateQueries(["profile"]);
         }
     };
 
