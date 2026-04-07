@@ -35,6 +35,31 @@ export default function Otp({ next, prev, data }) {
         }
     };
 
+    // ==========================
+    // HANDLE PASTE
+    // ==========================
+    const handlePaste = (e) => {
+        const pastedData = e.clipboardData.getData("text").trim();
+
+        if (!/^\d+$/.test(pastedData)) return;
+
+        const pastedArray = pastedData.slice(0, 4).split("");
+
+        const newOtp = ["", "", "", ""];
+
+        pastedArray.forEach((digit, index) => {
+            newOtp[index] = digit;
+        });
+
+        setOtp(newOtp);
+
+        // focus last filled input
+        const lastIndex = pastedArray.length - 1;
+        if (lastIndex >= 0) {
+            inputs.current[lastIndex]?.focus();
+        }
+    };
+
     const handleKeyDown = (e, index) => {
         if (e.key === "Backspace" && !otp[index] && index > 0) {
             inputs.current[index - 1]?.focus();
@@ -57,11 +82,11 @@ export default function Otp({ next, prev, data }) {
             try {
                 console.log("Fetching profile...");
 
-                // ✅ direct API call (NO cache issue)
+                // direct API call (NO cache issue)
                 if (isNewUser) {
                     console.log("NEW USER → onboarding");
 
-                    // 🔥 IMPORTANT: cache clear
+                    // IMPORTANT: cache clear
                     queryClient.removeQueries(["profile"]);
 
                     next(res?.data);
@@ -233,6 +258,9 @@ export default function Otp({ next, prev, data }) {
                                     value={digit}
                                     onChange={(e) => handleChange(e.target.value, index)}
                                     onKeyDown={(e) => handleKeyDown(e, index)}
+                                    onPaste={handlePaste}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     maxLength={1}
                                     className="w-full text-center bg-transparent outline-none text-[24px] font-semibold text-gray-400"
                                 />

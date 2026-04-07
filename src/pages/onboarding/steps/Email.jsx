@@ -4,40 +4,44 @@ import { sendOtpAPI } from "@/api/auth";
 export default function Email({ next, prev }) {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    // ✅ Email validation (simple + effective)
+    //  Email validation (stronger)
     const validateEmail = (email) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
     };
 
-    const handleContinue = async () => {
-        const trimmedEmail = email.trim();
+    //  derived state
+    const trimmedEmail = email.trim();
+    const isValidEmail = validateEmail(trimmedEmail);
 
+    const handleContinue = async () => {
         if (loading) return;
 
         if (!trimmedEmail) {
+            setError("Email is required");
             alert("Email is required");
             return;
         }
 
-        if (!validateEmail(trimmedEmail)) {
+        if (!isValidEmail) {
+            setError("Please enter a valid email");
             alert("Please enter a valid email");
             return;
         }
 
         try {
             setLoading(true);
+            setError("");
 
             const res = await sendOtpAPI({ email: trimmedEmail });
 
-            console.log("SEND OTP RESPONSE:", res); // 🔥 DEBUG
+            console.log("SEND OTP RESPONSE:", res);
 
-            // ✅ FIXED: safe check
             if (res?.success === false) {
                 throw new Error(res?.message || "Failed to send OTP");
             }
 
-            // ✅ SUCCESS FLOW
             next({ email: trimmedEmail });
 
         } catch (err) {
@@ -48,6 +52,7 @@ export default function Email({ next, prev }) {
                 err?.message ||
                 "Something went wrong. Please try again.";
 
+            setError(message);
             alert(message);
         } finally {
             setLoading(false);
@@ -90,18 +95,32 @@ export default function Email({ next, prev }) {
                             <input
                                 type="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    setError(""); // clear error on typing
+                                }}
                                 placeholder="youremail@example.com"
                                 className="flex-1 bg-transparent outline-none text-[14px] text-gray-400"
                             />
-                            <img src="/check.svg" className="w-6 h-6 " />
+
+                            {/* FIX: show tick only if valid email */}
+                            {isValidEmail && (
+                                <img src="/check.svg" className="w-6 h-6" />
+                            )}
                         </div>
+
+                        {/* optional error (no UI change impact) */}
+                        {error && (
+                            <p className="text-red-500 text-xs mt-2">
+                                {error}
+                            </p>
+                        )}
                     </div>
 
                     <div className="px-6 pt-6 pb-6">
                         <button
                             onClick={handleContinue}
-                            disabled={loading || !email.trim()}
+                            disabled={loading || !isValidEmail}
                             className="w-full h-[50px] bg-[#e98834] rounded-[9999px] flex items-center justify-center"
                         >
                             <span className="text-[14px] font-semibold text-[#04080b]">
