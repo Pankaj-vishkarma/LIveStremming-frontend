@@ -14,7 +14,7 @@ export default function Profile({ onFinish }) {
     const { mutate: updateProfile, isPending } = useUpdateProfile();
     const { mutateAsync: uploadImageMutation } = useUploadImage();
 
-    // ✅ CLEANUP (memory leak fix)
+    // CLEANUP (memory leak fix)
     useEffect(() => {
         return () => {
             if (preview) {
@@ -24,7 +24,7 @@ export default function Profile({ onFinish }) {
     }, [preview]);
 
     // ==========================
-    // 📸 HANDLE IMAGE SELECT
+    // HANDLE IMAGE SELECT
     // ==========================
     const handleImageSelect = async (file) => {
         try {
@@ -32,7 +32,7 @@ export default function Profile({ onFinish }) {
 
             if (!file) return;
 
-            // ✅ create preview URL
+            // create preview URL
             const localUrl = URL.createObjectURL(file);
             setPreview(localUrl);
 
@@ -45,7 +45,7 @@ export default function Profile({ onFinish }) {
     };
 
     // ==========================
-    // 🚀 HANDLE SUBMIT
+    // HANDLE SUBMIT
     // ==========================
     const handleSubmit = async () => {
         try {
@@ -58,7 +58,7 @@ export default function Profile({ onFinish }) {
 
             let uploadRes = null;
 
-            // 🔥 upload image (Cloudinary)
+            // upload image (Cloudinary)
             if (image) {
                 try {
                     uploadRes = await uploadImageMutation(image);
@@ -68,21 +68,21 @@ export default function Profile({ onFinish }) {
                 }
             }
 
-            // ✅ payload
+            // payload
             const payload = {
                 username: username.trim(),
             };
 
-            // ✅ add image data
+            // add image data
             if (uploadRes) {
                 payload.display_photo = uploadRes.url;
                 payload.display_photo_public_id = uploadRes.public_id;
             }
 
-            // 🔥 update profile
+            // update profile
             updateProfile(payload, {
                 onSuccess: () => {
-                    onFinish(); // ✅ only after success
+                    onFinish(); // only after success
                 },
                 onError: (err) => {
                     setError(

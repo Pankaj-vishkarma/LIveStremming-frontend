@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useEffect } from "react";
 
 export default function BottomSheet({ onClose, onSelect }) {
     const fileInputRef = useRef(null);
@@ -9,8 +10,14 @@ export default function BottomSheet({ onClose, onSelect }) {
     const [isCameraOpen, setIsCameraOpen] = useState(false);
     const [stream, setStream] = useState(null);
 
+    useEffect(() => {
+        if (isCameraOpen && stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
+        }
+    }, [isCameraOpen, stream]);
+
     // ==========================
-    // 📁 GALLERY
+    // GALLERY
     // ==========================
     const handleGalleryClick = () => {
         try {
@@ -43,32 +50,39 @@ export default function BottomSheet({ onClose, onSelect }) {
     };
 
     // ==========================
-    // 📸 CAMERA OPEN (ALL DEVICES)
+    // CAMERA OPEN (ALL DEVICES)
     // ==========================
     const handleCameraClick = async () => {
         try {
             setError("");
 
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Camera not supported");
+            }
+
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: "user" },
+                audio: false,
             });
 
             setStream(mediaStream);
             setIsCameraOpen(true);
 
-            setTimeout(() => {
-                if (videoRef.current) {
-                    videoRef.current.srcObject = mediaStream;
-                }
-            }, 100);
+            // ❗ DO NOT attach here
 
         } catch (err) {
-            setError("Camera access denied or not supported");
+            console.error("Camera Error:", err);
+
+            setError("Camera not supported, opening gallery...");
+
+            setTimeout(() => {
+                fileInputRef.current?.click();
+            }, 500);
         }
     };
 
     // ==========================
-    // 📸 CAPTURE PHOTO
+    // CAPTURE PHOTO
     // ==========================
     const handleCapture = () => {
         try {
@@ -139,13 +153,14 @@ export default function BottomSheet({ onClose, onSelect }) {
                     </>
                 )}
 
-                {/* 📸 CAMERA VIEW */}
+                {/* CAMERA VIEW */}
                 {isCameraOpen && (
                     <div className="flex flex-col items-center gap-4">
                         <video
                             ref={videoRef}
                             autoPlay
                             playsInline
+                            muted
                             className="w-full rounded-lg"
                         />
 
