@@ -9,6 +9,7 @@ module.exports = {
       fontFamily: {
         museomoderno: ['"MuseoModerno"', "sans-serif"],
         "space-grotesk": ['"Space Grotesk"', "sans-serif"],
+        inter: ['"Inter"', "sans-serif"],
       },
     },
   },

@@ -20,9 +20,6 @@ export default function Otp({ next, prev, data }) {
 
     const email = data?.email ?? "";
 
-    // ==========================
-    // INPUT HANDLING
-    // ==========================
     const handleChange = (value, index) => {
         if (!/^[0-9]?$/.test(value)) return;
 
@@ -35,16 +32,12 @@ export default function Otp({ next, prev, data }) {
         }
     };
 
-    // ==========================
-    // HANDLE PASTE
-    // ==========================
     const handlePaste = (e) => {
         const pastedData = e.clipboardData.getData("text").trim();
 
         if (!/^\d+$/.test(pastedData)) return;
 
         const pastedArray = pastedData.slice(0, 4).split("");
-
         const newOtp = ["", "", "", ""];
 
         pastedArray.forEach((digit, index) => {
@@ -53,7 +46,6 @@ export default function Otp({ next, prev, data }) {
 
         setOtp(newOtp);
 
-        // focus last filled input
         const lastIndex = pastedArray.length - 1;
         if (lastIndex >= 0) {
             inputs.current[lastIndex]?.focus();
@@ -66,56 +58,34 @@ export default function Otp({ next, prev, data }) {
         }
     };
 
-    // ==========================
-    // VERIFY OTP (React Query)
-    // ==========================
     const verifyMutation = useMutation({
         mutationFn: verifyOtpAPI,
-
         onSuccess: async (res) => {
-            console.log("OTP RESPONSE:", res);
-
             if (!res?.success) return;
 
             const isNewUser = res?.data?.isNewUser;
 
             try {
-                console.log("Fetching profile...");
-
-                // direct API call (NO cache issue)
                 if (isNewUser) {
-                    console.log("NEW USER → onboarding");
-
-                    // IMPORTANT: cache clear
                     queryClient.removeQueries(["profile"]);
-
                     next(res?.data);
                 } else {
-                    console.log("EXISTING USER → feed");
-
                     const user = await getProfile();
-
                     dispatch(setUser(user));
                     queryClient.setQueryData(["profile"], user);
-
                     navigate("/feed", { replace: true });
                 }
-
             } catch (error) {
                 console.log("PROFILE ERROR:", error);
             }
         },
         onError: (err) => {
-            console.error("OTP Verify Error:", err);
-
             const message =
                 err?.response?.data?.message ||
                 err?.message ||
                 "Invalid or expired OTP";
 
             alert(message);
-
-            // reset
             setOtp(["", "", "", ""]);
             hasSubmitted.current = false;
             inputs.current[0]?.focus();
@@ -142,9 +112,6 @@ export default function Otp({ next, prev, data }) {
         });
     };
 
-    // ==========================
-    // AUTO SUBMIT
-    // ==========================
     useEffect(() => {
         const isComplete = otp.every((digit) => digit !== "");
 
@@ -157,9 +124,6 @@ export default function Otp({ next, prev, data }) {
         }
     }, [otp]);
 
-    // ==========================
-    // TIMER
-    // ==========================
     useEffect(() => {
         if (timer === 0) return;
 
@@ -170,29 +134,18 @@ export default function Otp({ next, prev, data }) {
         return () => clearInterval(interval);
     }, [timer]);
 
-
-    // ==========================
-    // RESEND OTP (React Query)
-    // ==========================
     const resendMutation = useMutation({
         mutationFn: sendOtpAPI,
-
         onSuccess: (res) => {
             if (!res?.success) return;
 
             alert("OTP resent successfully");
-
-            // full reset
             setOtp(["", "", "", ""]);
             hasSubmitted.current = false;
             inputs.current[0]?.focus();
-
             setTimer(30);
         },
-
         onError: (err) => {
-            console.error("Resend Error:", err);
-
             const message =
                 err?.response?.data?.message ||
                 "Failed to resend OTP";
@@ -203,105 +156,104 @@ export default function Otp({ next, prev, data }) {
 
     const handleResend = () => {
         if (timer > 0 || resendMutation.isPending || !email) return;
-
         resendMutation.mutate({ email });
     };
 
-    // ==========================
-    // UI (UNCHANGED)
-    // ==========================
     return (
-        <div className="w-[412px] mx-auto min-h-screen bg-[#0e0f0b] flex flex-col justify-between">
+        <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
 
-            <section className="flex-1 flex flex-col text-white font-museomoderno">
+            <div className="w-full max-w-[412px] min-h-screen flex flex-col justify-between">
 
-                <div className="h-16 flex items-center px-6">
-                    <button onClick={prev} className="flex items-end gap-[9px]">
-                        <img src="/arrow-left.svg" className="w-6 h-6" />
-                        <h3 className="text-[22px] font-inter font-medium">
-                            Get Started
-                        </h3>
-                    </button>
-                </div>
+                <section className="flex-1 flex flex-col text-white font-museomoderno">
 
-                <div className="px-6 pt-6">
-                    <h1 className="text-[28px] font-medium">
-                        Verification
-                    </h1>
-                </div>
+                    <div className="h-14 sm:h-16 flex items-center px-4 sm:px-6">
+                        <button onClick={prev} className="flex items-end gap-2 sm:gap-[9px]">
+                            <img src="/arrow-left.svg" className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <h3 className="text-[18px] sm:text-[22px] font-inter font-medium">
+                                Get Started
+                            </h3>
+                        </button>
+                    </div>
 
-                <div className="px-6 pt-1 font-inter">
-                    <p className="text-[14px] font-medium">
-                        We sent a verification code to “{email}”.
-                    </p>
-                </div>
+                    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
+                        <h1 className="text-[24px] sm:text-[26px] md:text-[28px] font-medium">
+                            Verification
+                        </h1>
+                    </div>
 
-                <div className="px-6 pt-6">
-                    <div className="rounded-full bg-gradient-to-r from-[#ffbf7c33] to-[#99734a00] flex items-center justify-center p-3 gap-2.5">
-                        <img src="/alert-circle.png" className="w-6 h-6" />
-                        <span className="text-[14px] font-inter">
-                            Just in case check your Spam Folder.
+                    <div className="px-4 sm:px-6 pt-1 font-inter">
+                        <p className="text-[13px] sm:text-[14px] font-medium break-words">
+                            We sent a verification code to “{email}”.
+                        </p>
+                    </div>
+
+                    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
+                        <div className="rounded-full bg-gradient-to-r from-[#ffbf7c33] to-[#99734a00] flex items-center justify-center p-3 gap-2.5">
+                            <img src="/alert-circle.png" className="w-5 h-5 sm:w-6 sm:h-6" />
+                            <span className="text-[12px] sm:text-[14px] font-museomoderno">
+                                Just in case check your Spam Folder.
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
+                        <div className="flex gap-2 sm:gap-2.5 justify-center">
+
+                            {otp.map((digit, index) => (
+                                <div
+                                    key={index}
+                                    className="flex-1 max-w-[80px] sm:max-w-[83px] h-[65px] sm:h-[80px] bg-[#1a1a1a] border border-[#1a1a1a] rounded-[10px] flex items-center justify-center"
+                                >
+                                    <input
+                                        ref={(el) => (inputs.current[index] = el)}
+                                        value={digit}
+                                        onChange={(e) => handleChange(e.target.value, index)}
+                                        onKeyDown={(e) => handleKeyDown(e, index)}
+                                        onPaste={handlePaste}
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={1}
+                                        className="w-full text-center bg-transparent outline-none text-[20px] sm:text-[24px] font-semibold text-gray-400"
+                                    />
+                                </div>
+                            ))}
+
+                        </div>
+                    </div>
+
+                    <div className="px-4 sm:px-6 pt-6 flex items-center justify-center gap-2 font-inter flex-wrap">
+                        <button
+                            onClick={handleResend}
+                            disabled={resendMutation.isPending || timer > 0}
+                            className={`px-4 py-2 rounded-full font-semibold text-[13px] sm:text-[14px] 
+${timer > 0 || resendMutation.isPending
+                                    ? "bg-[#e9883433] text-[#919191] cursor-not-allowed"
+                                    : "bg-[#e98834] text-[#04080b] cursor-pointer"
+                                }`}
+                        >
+                            {resendMutation.isPending ? "Sending..." : "Resend Code"}
+                        </button>
+                        <span className="font-semibold text-[13px] sm:text-[14px]">
+                            in 00:{timer.toString().padStart(2, "0")}
                         </span>
                     </div>
-                </div>
 
-                <div className="px-6 pt-6">
-                    <div className="flex gap-2.5 justify-center">
+                </section>
 
-                        {otp.map((digit, index) => (
-                            <div
-                                key={index}
-                                className="w-[83px] h-[80px] bg-[#1a1a1a] border border-[#1a1a1a] rounded-[10px] flex items-center justify-center"
-                            >
-                                <input
-                                    ref={(el) => (inputs.current[index] = el)}
-                                    value={digit}
-                                    onChange={(e) => handleChange(e.target.value, index)}
-                                    onKeyDown={(e) => handleKeyDown(e, index)}
-                                    onPaste={handlePaste}
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    maxLength={1}
-                                    className="w-full text-center bg-transparent outline-none text-[24px] font-semibold text-gray-400"
-                                />
-                            </div>
-                        ))}
+                <footer className="px-4 sm:px-6 pb-6 text-[12px] sm:text-[14px] font-inter text-white">
+                    <p className="leading-relaxed">
+                        By logging in you confirm you are above 18 years and accept our{" "}
+                        <span className="underline text-[#ffa312]">
+                            Privacy Policy
+                        </span>{" "}
+                        and{" "}
+                        <span className="underline text-[#ff9f13]">
+                            Term & Condition
+                        </span>
+                    </p>
+                </footer>
 
-                    </div>
-                </div>
-
-                <div className="px-6 pt-6 flex items-center justify-center gap-2.5 font-inter">
-                    <button
-                        onClick={handleResend}
-                        disabled={resendMutation.isPending || timer > 0}
-                        className={`px-4 py-2 rounded-full font-semibold text-[14px] 
-${timer > 0 || resendMutation.isPending
-                                ? "bg-[#e9883433] text-[#919191] cursor-not-allowed"
-                                : "bg-[#e98834] text-[#04080b] cursor-pointer"
-                            }`}
-                    >
-                        {resendMutation.isPending ? "Sending..." : "Resend Code"}
-                    </button>
-                    <span className="font-semibold text-[14px]">
-                        in 00:{timer.toString().padStart(2, "0")}
-                    </span>
-                </div>
-
-            </section>
-
-            <footer className="px-6 pb-6 text-[14px] font-inter text-white">
-                <p>
-                    By logging in you confirm you are above 18 years and accept our{" "}
-                    <span className="underline text-[#ffa312]">
-                        Privacy Policy
-                    </span>{" "}
-                    and{" "}
-                    <span className="underline text-[#ff9f13]">
-                        Term & Condition
-                    </span>
-                </p>
-            </footer>
-
+            </div>
         </div>
     );
 }

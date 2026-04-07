@@ -29,14 +29,17 @@ const Profile = () => {
     const [uploading, setUploading] = useState(false);
     const [bioError, setBioError] = useState("");
 
-    //  local preview state (IMPORTANT FIX)
+    // FIXED STATES
     const [localImage, setLocalImage] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const handleEdit = () => {
         setFormData({
             username: user?.username || "",
             about_me: user?.about_me || ""
         });
+        setLocalImage(null);
+        setSelectedFile(null);
         setIsEditing(true);
     };
 
@@ -48,186 +51,97 @@ const Profile = () => {
             [name]: value
         });
 
-        // BIO VALIDATION (live)
         if (name === "about_me") {
             const trimmed = value.trim();
 
-            // Empty
-            if (!trimmed) {
-                setBioError("Bio cannot be empty");
-                return;
-            }
-
-            // Length
-            if (trimmed.length < 3) {
-                setBioError("Bio must be at least 3 characters");
-                return;
-            }
-
-            if (trimmed.length > 150) {
-                setBioError("Bio cannot exceed 150 characters");
-                return;
-            }
-
-            // Only numbers
-            if (/^\d+$/.test(trimmed)) {
-                setBioError("Bio cannot contain only numbers");
-                return;
-            }
-
-            //  No meaningful words (like random string)
-            if (!/[a-zA-Z]{2,}/.test(trimmed)) {
-                setBioError("Please enter a meaningful bio");
-                return;
-            }
-
-            //  Repeated characters (aaaaaa, jjjjj)
-            if (/(.)\1{4,}/.test(trimmed)) {
-                setBioError("Bio cannot contain repeated characters");
-                return;
-            }
-
-            //  Too many special characters
-            if (/[^a-zA-Z0-9\s.,!?'-]/.test(trimmed)) {
-                setBioError("Bio contains invalid characters");
-                return;
-            }
+            if (!trimmed) return setBioError("Bio cannot be empty");
+            if (trimmed.length < 3) return setBioError("Bio must be at least 3 characters");
+            if (trimmed.length > 150) return setBioError("Bio cannot exceed 150 characters");
+            if (/^\d+$/.test(trimmed)) return setBioError("Bio cannot contain only numbers");
+            if (!/[a-zA-Z]{2,}/.test(trimmed)) return setBioError("Please enter a meaningful bio");
+            if (/(.)\1{4,}/.test(trimmed)) return setBioError("Bio cannot contain repeated characters");
+            if (/[^a-zA-Z0-9\s.,!?'-]/.test(trimmed)) return setBioError("Bio contains invalid characters");
 
             setBioError("");
         }
     };
 
+    // FIXED SAVE (avatar upload moved here)
     const handleSave = async () => {
         try {
             const trimmedBio = formData.about_me.trim();
 
-            // VALIDATION (same as before)
-            if (!trimmedBio) {
-                setBioError("Bio cannot be empty");
-                return;
+            if (!trimmedBio) return setBioError("Bio cannot be empty");
+
+            let imageUrl = user?.display_photo;
+
+            //  upload only on save
+            if (selectedFile) {
+                setUploading(true);
+                const uploadRes = await uploadImage(selectedFile);
+                imageUrl = uploadRes.url;
             }
 
-            if (trimmedBio.length < 3) {
-                setBioError("Bio must be at least 3 characters");
-                return;
-            }
-
-            if (trimmedBio.length > 150) {
-                setBioError("Bio cannot exceed 150 characters");
-                return;
-            }
-
-            if (/^\d+$/.test(trimmedBio)) {
-                setBioError("Bio cannot contain only numbers");
-                return;
-            }
-
-            if (!/[a-zA-Z]{2,}/.test(trimmedBio)) {
-                setBioError("Please enter a meaningful bio");
-                return;
-            }
-
-            if (/(.)\1{4,}/.test(trimmedBio)) {
-                setBioError("Bio cannot contain repeated characters");
-                return;
-            }
-
-            if (/[^a-zA-Z0-9\s.,!?'-]/.test(trimmedBio)) {
-                setBioError("Bio contains invalid characters");
-                return;
-            }
-
-            // 1. OPTIMISTIC UPDATE (instant UI)
             queryClient.setQueryData(["profile"], (oldData) => {
                 if (!oldData) return oldData;
-
                 return {
                     ...oldData,
                     data: {
                         ...oldData.data,
                         about_me: trimmedBio,
-                    },
-                };
-            });
-
-            // 2. API CALL
-            await updateProfile({
-                ...formData,
-                about_me: trimmedBio,
-            });
-
-            // 3. BACKGROUND SYNC
-            queryClient.invalidateQueries(["profile"]);
-
-            setIsEditing(false);
-            setBioError("");
-
-        } catch (error) {
-            console.error("Update profile error:", error);
-
-            // ❗ rollback (optional but pro level)
-            queryClient.invalidateQueries(["profile"]);
-        }
-    };
-
-    const handleAvatarClick = () => {
-        if (!isEditing) {
-            setShowAvatarModal(true);
-        }
-    };
-
-    // FIXED AVATAR UPLOAD
-    const handleAvatarChange = async (e) => {
-        if (!isEditing) return;
-
-        const file = e.target.files[0];
-        if (!file) return;
-
-        try {
-            setUploading(true);
-
-            // INSTANT PREVIEW (mobile fix)
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setLocalImage(reader.result);
-            };
-            reader.readAsDataURL(file);
-
-            const uploadRes = await uploadImage(file);
-            const imageUrl = uploadRes.url;
-
-            await updateProfile({
-                display_photo: imageUrl,
-            });
-
-            // CACHE UPDATE (instant UI update)
-            queryClient.setQueryData(["profile"], (oldData) => {
-                if (!oldData) return oldData;
-
-                return {
-                    ...oldData,
-                    data: {
-                        ...oldData.data,
                         display_photo: imageUrl,
                     },
                 };
             });
 
+            await updateProfile({
+                ...formData,
+                about_me: trimmedBio,
+                display_photo: imageUrl,
+            });
+
             queryClient.invalidateQueries(["profile"]);
 
+            setIsEditing(false);
+            setLocalImage(null);
+            setSelectedFile(null);
+            setBioError("");
+
         } catch (error) {
-            console.error("Avatar upload error:", error);
+            console.error(error);
+            queryClient.invalidateQueries(["profile"]);
         } finally {
             setUploading(false);
         }
     };
 
+    //  FIXED IMAGE SELECT (NO API CALL)
+    const handleAvatarChange = (e) => {
+        if (!isEditing) return;
+
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setSelectedFile(file);
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setLocalImage(reader.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setLocalImage(null);
+        setSelectedFile(null);
+        setBioError("");
+    };
+
     const handleLogout = async () => {
         try {
             await axios.post("/auth/logout");
-        } catch (error) {
-            console.log("Logout API error (ignored)");
-        }
+        } catch { }
 
         queryClient.clear();
         dispatch({ type: "auth/logout" });
@@ -244,145 +158,138 @@ const Profile = () => {
 
     return (
         <>
-            <div className="px-4 pt-4 pb-28 space-y-5">
+            <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
 
-                <div className="flex items-center gap-4">
+                <div className="w-full max-w-[412px] px-4 sm:px-5 pt-4 pb-24 space-y-5">
 
-                    <div className="relative">
+                    <div className="flex items-center gap-4">
 
-                        <img
-                            // FIX: local preview first
-                            src={localImage || user?.display_photo || avatarFallback}
-                            className="w-20 h-20 rounded-full object-cover cursor-pointer"
-                            onClick={handleAvatarClick}
-                        />
+                        <div className="relative flex-shrink-0">
 
-                        {isEditing && (
-                            <input
-                                type="file"
-                                accept="image/*"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={handleAvatarChange}
-                            />
-                        )}
-
-                        {uploading && (
-                            <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white text-xs">
-                                Uploading...
-                            </div>
-                        )}
-                    </div>
-
-                    <div>
-                        {isEditing ? (
-                            <input
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                className="bg-[#1a1a1a] text-white text-sm px-2 py-1 rounded"
-                            />
-                        ) : (
-                            <h2 className="text-lg font-semibold text-white">
-                                {user?.username || "User"}
-                            </h2>
-                        )}
-
-                        <p className="text-xs text-gray-400">
-                            {user?.email || "No email"}
-                        </p>
-                    </div>
-
-                </div>
-
-                <div className="bg-[#1a1a1a] rounded-xl p-3">
-                    <p className="text-xs text-gray-400 mb-1">About</p>
-
-                    {isEditing ? (
-                        <>
-                            <textarea
-                                name="about_me"
-                                value={formData.about_me}
-                                onChange={handleChange}
-                                className="w-full bg-[#0e0f0b] text-white text-sm p-2 rounded"
+                            <img
+                                src={localImage || user?.display_photo || avatarFallback}
+                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover cursor-pointer"
+                                onClick={() => !isEditing && setShowAvatarModal(true)}
                             />
 
-                            {/* ERROR */}
-                            {bioError && (
-                                <p className="text-red-500 text-xs mt-1">
-                                    {bioError}
-                                </p>
+                            {isEditing && (
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    onChange={handleAvatarChange}
+                                />
                             )}
-                        </>
-                    ) : (
-                        <p className="text-sm text-white">
-                            {user?.about_me || "No bio added"}
-                        </p>
-                    )}
-                </div>
 
-                <div className="flex justify-between text-center">
-                    <div>
-                        <p className="text-white text-sm font-semibold">120</p>
-                        <p className="text-xs text-gray-400">Followers</p>
+                            {uploading && (
+                                <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-xs text-white">
+                                    Uploading...
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex-1">
+
+                            {isEditing ? (
+                                <input
+                                    name="username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    className="w-full bg-[#1a1a1a] text-white text-sm px-2 py-1 rounded"
+                                />
+                            ) : (
+                                <h2 className="text-[16px] sm:text-lg font-semibold text-white">
+                                    {user?.username || "User"}
+                                </h2>
+                            )}
+
+                            <p className="text-[11px] sm:text-xs text-gray-400 break-all">
+                                {user?.email || "No email"}
+                            </p>
+                        </div>
+
                     </div>
-                    <div>
-                        <p className="text-white text-sm font-semibold">80</p>
-                        <p className="text-xs text-gray-400">Following</p>
+
+                    <div className="bg-[#1a1a1a] rounded-xl p-3">
+                        <p className="text-xs text-gray-400 mb-1">About</p>
+
+                        {isEditing ? (
+                            <>
+                                <textarea
+                                    name="about_me"
+                                    value={formData.about_me}
+                                    onChange={handleChange}
+                                    className="w-full bg-[#0e0f0b] text-white text-sm p-2 rounded resize-none"
+                                />
+                                {bioError && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {bioError}
+                                    </p>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-sm text-white break-words">
+                                {user?.about_me || "No bio added"}
+                            </p>
+                        )}
                     </div>
-                    <div>
-                        <p className="text-white text-sm font-semibold">0</p>
-                        <p className="text-xs text-gray-400">Coins</p>
+
+                    <div className="flex justify-between text-center">
+                        <div>
+                            <p className="text-sm font-semibold text-white">120</p>
+                            <p className="text-xs text-gray-400">Followers</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-white">80</p>
+                            <p className="text-xs text-gray-400">Following</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-white">0</p>
+                            <p className="text-xs text-gray-400">Coins</p>
+                        </div>
                     </div>
+
+                    <div className="flex gap-2 sm:gap-3">
+                        {isEditing ? (
+                            <>
+                                <button onClick={handleSave} className="flex-1 bg-[#e98834] text-black py-2 rounded-lg text-sm font-medium">
+                                    Save
+                                </button>
+                                <button onClick={handleCancel} className="flex-1 bg-[#1a1a1a] text-white py-2 rounded-lg text-sm font-medium">
+                                    Cancel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={handleEdit} className="flex-1 bg-[#e98834] text-black py-2 rounded-lg text-sm font-medium">
+                                    Edit Profile
+                                </button>
+                                <button onClick={handleLogout} className="flex-1 bg-[#1a1a1a] text-white py-2 rounded-lg text-sm font-medium">
+                                    Logout
+                                </button>
+                            </>
+                        )}
+                    </div>
+
                 </div>
-
-                <div className="flex gap-3">
-                    {isEditing ? (
-                        <>
-                            <button onClick={handleSave} className="flex-1 bg-[#e98834] text-black py-2 rounded-lg text-sm font-medium">
-                                Save
-                            </button>
-
-                            <button onClick={() => setIsEditing(false)} className="flex-1 bg-[#1a1a1a] text-white py-2 rounded-lg text-sm font-medium">
-                                Cancel
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button onClick={handleEdit} className="flex-1 bg-[#e98834] text-black py-2 rounded-lg text-sm font-medium">
-                                Edit Profile
-                            </button>
-
-                            <button onClick={handleLogout} className="flex-1 bg-[#1a1a1a] text-white py-2 rounded-lg text-sm font-medium">
-                                Logout
-                            </button>
-                        </>
-                    )}
-                </div>
-
             </div>
 
             {showAvatarModal && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
                     <div className="relative">
-
                         <img
                             src={localImage || user?.display_photo || avatarFallback}
-                            className="w-64 h-64 object-cover rounded-xl"
+                            className="w-60 h-60 sm:w-64 sm:h-64 object-cover rounded-xl"
                         />
-
                         <button
                             onClick={() => setShowAvatarModal(false)}
                             className="absolute -top-3 -right-3 bg-white text-black w-6 h-6 rounded-full text-xs flex items-center justify-center"
                         >
                             ✕
                         </button>
-
                     </div>
-
                 </div>
             )}
-
         </>
     );
 };

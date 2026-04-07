@@ -6,12 +6,10 @@ export default function Email({ next, prev }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    //  Email validation (stronger)
     const validateEmail = (email) => {
         return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
     };
 
-    //  derived state
     const trimmedEmail = email.trim();
     const isValidEmail = validateEmail(trimmedEmail);
 
@@ -61,55 +59,65 @@ export default function Email({ next, prev }) {
 
     return (
         <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
+
+            {/* MAIN WRAPPER */}
             <div className="w-full max-w-[412px] min-h-screen flex flex-col">
 
                 <section className="flex-1 flex flex-col text-white font-inter">
 
-                    <div className="h-16 flex items-center px-6">
-                        <div className="flex items-end gap-[9px]">
+                    {/* HEADER */}
+                    <div className="h-14 sm:h-16 flex items-center px-4 sm:px-6">
+                        <div className="flex items-end gap-2 sm:gap-[9px]">
                             <img
                                 src="/arrow-left.svg"
-                                className="w-6 h-6 cursor-pointer"
+                                className="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer"
                                 onClick={prev}
+                                alt="back"
                             />
-                            <h3 className="text-[22px] font-medium">
+                            <h3 className="text-[18px] sm:text-[22px] font-medium">
                                 Get Started
                             </h3>
                         </div>
                     </div>
 
-                    <div className="px-6 pt-6 font-museomoderno">
-                        <h1 className="text-[28px] font-medium">
+                    {/* TITLE */}
+                    <div className="px-4 sm:px-6 pt-4 sm:pt-6 font-museomoderno">
+                        <h1 className="text-[22px] sm:text-[26px] md:text-[28px] font-medium">
                             Starting with Email
                         </h1>
                     </div>
 
-                    <div className="px-6 pt-1">
-                        <p className="text-[14px] text-[#907b9b] font-medium">
+                    {/* SUBTEXT */}
+                    <div className="px-4 sm:px-6 pt-1">
+                        <p className="text-[12px] sm:text-[14px] text-[#FFFFFF] font-medium">
                             Enter your Email to continue
                         </p>
                     </div>
 
-                    <div className="px-6 pt-6">
-                        <div className="w-full rounded-[10px] bg-[#1a1a1a] border border-[#1a1a1a] flex items-center py-[14px] px-[15px] gap-2.5">
+                    {/* INPUT */}
+                    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
+                        <div className="w-full rounded-[10px] bg-[#1a1a1a] border border-[#1a1a1a] flex items-center py-3 sm:py-[14px] px-3 sm:px-[15px] gap-2">
+
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
-                                    setError(""); // clear error on typing
+                                    setError("");
                                 }}
                                 placeholder="youremail@example.com"
-                                className="flex-1 bg-transparent outline-none text-[14px] text-gray-400"
+                                className="flex-1 bg-transparent outline-none text-[13px] sm:text-[14px] text-white font-inter placeholder:text-gray-400"
                             />
 
-                            {/* FIX: show tick only if valid email */}
                             {isValidEmail && (
-                                <img src="/check.svg" className="w-6 h-6" />
+                                <img
+                                    src="/check.svg"
+                                    className="w-5 h-5 sm:w-6 sm:h-6"
+                                    alt="valid"
+                                />
                             )}
                         </div>
 
-                        {/* optional error (no UI change impact) */}
                         {error && (
                             <p className="text-red-500 text-xs mt-2">
                                 {error}
@@ -117,13 +125,14 @@ export default function Email({ next, prev }) {
                         )}
                     </div>
 
-                    <div className="px-6 pt-6 pb-6">
+                    {/* BUTTON */}
+                    <div className="px-4 sm:px-6 pt-6 pb-6 mt-auto">
                         <button
                             onClick={handleContinue}
                             disabled={loading || !isValidEmail}
-                            className="w-full h-[50px] bg-[#e98834] rounded-[9999px] flex items-center justify-center"
+                            className="w-full h-[45px] sm:h-[50px] bg-[#e98834] rounded-full flex items-center justify-center"
                         >
-                            <span className="text-[14px] font-semibold text-[#04080b]">
+                            <span className="text-[13px] sm:text-[14px] font-semibold text-[#04080b]">
                                 {loading ? "Sending..." : "Continue"}
                             </span>
                         </button>
