@@ -197,7 +197,7 @@ export default function Otp({ next, prev, data }) {
                     </div>
 
                     <div className="px-4 sm:px-6 pt-4 sm:pt-6">
-                        <div className="flex gap-2 sm:gap-2.5 justify-center">
+                        <div className="flex gap-2 sm:gap-2.5 justify-center mt-4">
 
                             {otp.map((digit, index) => (
                                 <div
@@ -210,10 +210,11 @@ export default function Otp({ next, prev, data }) {
                                         onChange={(e) => handleChange(e.target.value, index)}
                                         onKeyDown={(e) => handleKeyDown(e, index)}
                                         onPaste={handlePaste}
+                                        plaseholder="0"
                                         inputMode="numeric"
                                         pattern="[0-9]*"
                                         maxLength={1}
-                                        className="w-full text-center bg-transparent outline-none text-[20px] sm:text-[24px] font-semibold text-gray-400"
+                                        className="w-full text-center bg-transparent outline-none text-[20px] sm:text-[24px] font-inter text-gray-400"
                                     />
                                 </div>
                             ))}

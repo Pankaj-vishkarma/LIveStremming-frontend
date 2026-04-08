@@ -143,8 +143,7 @@ export default function Feed() {
 
                             <div className="absolute bottom-0 left-0 right-0 px-2 sm:px-3 pb-2 sm:pb-3 pt-6 sm:pt-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
 
-                                <div className="flex items-center gap-2 bg-[#00000042] px-3 py-2 rounded-[23px]">
-
+                                <div className="flex items-center gap-2 bg-[#00000042] px-[7px] py-[7px] rounded-[23px]">
                                     <img
                                         src={item.avatar}
                                         className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover"

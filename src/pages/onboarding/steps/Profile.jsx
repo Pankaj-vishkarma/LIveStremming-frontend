@@ -137,7 +137,7 @@ export default function Profile({ onFinish }) {
                     </div>
 
                     {/* USERNAME */}
-                    <div>
+                    <div className="flex flex-col gap-[5px]">
                         <label className="text-[14px] font-medium font-inter">
                             <span className="text-[#FFFFFF]">User Name </span>
                             <span className="text-[#97734E]">(Display Name)</span>

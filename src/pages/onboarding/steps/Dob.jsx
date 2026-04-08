@@ -112,7 +112,7 @@ export default function DobStep({ next }) {
                             }
                             placeholder="Enter DOB"
                             readOnly
-                            className="full w-full h-[44px] px-6 sm:h-[48px] rounded-[10px] bg-[#1a1a1a] text-sm sm:text-base font-inter cursor-pointer"
+                            className="w-full h-[44px] px-6 sm:h-[48px] rounded-[10px] bg-[#1a1a1a] text-sm sm:text-base font-inter cursor-pointer placeholder:text-[10px]"
                         />
 
                         {error && (
