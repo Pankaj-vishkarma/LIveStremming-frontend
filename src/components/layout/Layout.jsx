@@ -6,10 +6,9 @@ const Layout = () => {
     return (
         <div className="w-full h-[100dvh] bg-[#0e0f0b] flex justify-center text-white overflow-hidden">
 
-            {/* SAME AS FEED ROOT */}
             <div className="w-full max-w-[412px] h-[100dvh] overflow-hidden relative flex flex-col">
 
-                {/* HEADER (FIXED POSITION) */}
+                {/* HEADER */}
                 <div className="px-4 pt-4">
                     <Header />
                 </div>
@@ -17,7 +16,7 @@ const Layout = () => {
                 {/* SCROLL AREA */}
                 <div className="flex-1 overflow-y-auto no-scrollbar">
 
-                    {/* PAGE CONTENT (NO CHANGE) */}
+                    {/* PAGE CONTENT */}
                     <Outlet />
 
                 </div>

@@ -7,16 +7,15 @@ export const useUpdateProfile = () => {
     return useMutation({
         mutationFn: updateProfile,
 
-        // ✅ success ke baad cache refresh
+        // success ke baad cache refresh
         onSuccess: (data) => {
             // profile refetch
             queryClient.invalidateQueries(["profile"]);
 
-            // optional: directly set data
             queryClient.setQueryData(["profile"], data);
         },
 
-        // ✅ centralized error handling
+        // centralized error handling
         onError: (error) => {
             console.error("Profile Update Error:", error);
         },

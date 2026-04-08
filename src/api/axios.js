@@ -26,7 +26,7 @@ axiosInstance.interceptors.response.use(
             }
         }
 
-        // VERY IMPORTANT: send clean error to React Query
+        //  send clean error to React Query
         if (error.response) {
             return Promise.reject(error.response.data);
         }

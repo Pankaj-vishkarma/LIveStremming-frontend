@@ -13,10 +13,10 @@ const ProtectedRoute = ({ children }) => {
 
     // wait for auth check
     if (!isAuthChecked) {
-        return null; // UI same rakhne ke liye blank
+        return null;
     }
 
-    // not logged in → splash pe bhejo
+    
     if (!cachedUser) {
         return <Navigate to="/" replace />;
     }

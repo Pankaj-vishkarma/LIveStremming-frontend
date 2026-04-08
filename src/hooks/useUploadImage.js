@@ -5,17 +5,15 @@ export const useUploadImage = () => {
     return useMutation({
         mutationFn: uploadImage,
 
-        // ✅ success handler
+        // success handler
         onSuccess: (data) => {
             console.log("Image uploaded successfully:", data);
         },
 
-        // ✅ error handler
+        // error handler
         onError: (error) => {
             console.error("Image upload failed:", error);
         },
-
-        // ✅ retry (optional but recommended)
         retry: 1,
     });
 };

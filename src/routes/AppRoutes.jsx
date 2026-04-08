@@ -4,6 +4,7 @@ import Feed from "../pages/main/Feed";
 import Messages from "../pages/main/Messages";
 import Profile from "../pages/main/Profile";
 import Streamers from "../pages/main/Streamers";
+import LiveRoom from "../pages/live/LiveRoom";
 
 import ProtectedRoute from "./ProtectedRoute";
 import { useProfile } from "../hooks/useProfile";
@@ -31,10 +32,19 @@ export default function AppRoutes() {
                 }
             />
 
-            {/* Optional onboarding */}
             <Route path="/onboarding/*" element={<Onboarding />} />
 
-            {/* MAIN APP (ALL UNDER LAYOUT) */}
+            {/* LIVE ROUTE */}
+            <Route
+                path="/live/:username"
+                element={
+                    <ProtectedRoute>
+                        <LiveRoom />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* MAIN APP */}
             <Route
                 element={
                     <ProtectedRoute>
