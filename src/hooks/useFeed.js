@@ -1,23 +1,18 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getFeed } from "../api/streamers";
+import { getPublicStreamers } from "../api/streamer";
 
 export const useFeed = ({ activeTab, selectedGlobal }) => {
     return useInfiniteQuery({
         queryKey: ["feed", activeTab, selectedGlobal],
 
-        queryFn: ({ pageParam = null }) =>
-            getFeed({ pageParam, activeTab, selectedGlobal }),
+        queryFn: async ({ pageParam = null }) => {
+            const res = await getPublicStreamers({ pageParam });
 
-        getNextPageParam: (lastPage) => {
-            if (lastPage?.has_more) {
-                return lastPage.next_cursor;
-            }
-            return undefined;
+            return res.data?.data || res.data;
         },
 
-        staleTime: 1000 * 60,
-        gcTime: 1000 * 60 * 5,
-        retry: 2,
-        refetchOnWindowFocus: false,
+        getNextPageParam: (lastPage) => {
+            return lastPage?.next_cursor || null;
+        },
     });
 };

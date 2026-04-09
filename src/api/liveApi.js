@@ -1,19 +1,32 @@
 import api from "./axios";
 
-//  JOIN LIVE (viewer + streamer using both)
 export const getLiveToken = async (username) => {
-    const res = await api.get(`/live/streamers/${username}/join`);
-    return res.data.data;
+    try {
+        const res = await api.get(`/streamers/${username}/join`);
+        return res?.data;
+    } catch (err) {
+        console.error("JOIN LIVE API ERROR:", err.response?.data || err);
+        return null;
+    }
 };
 
-// START LIVE (only streamer)
 export const startLive = async () => {
-    const res = await api.post("/live/streamer/go-live");
-    return res.data.data;
+    try {
+        const res = await api.post("/streamer/go-live");
+        return res?.data;
+    } catch (err) {
+        console.error("START LIVE ERROR:", err.response?.data || err);
+        return null;
+    }
 };
 
 // END LIVE
 export const endLive = async () => {
-    const res = await api.post("/live/streamer/end-live");
-    return res.data;
+    try {
+        const res = await api.post("/streamer/end-live");
+        return res?.data;
+    } catch (err) {
+        console.error("END LIVE ERROR:", err.response?.data || err);
+        return null;
+    }
 };

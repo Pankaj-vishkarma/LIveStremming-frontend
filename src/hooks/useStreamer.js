@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { applyStreamer, getStreamerStatus } from "../api/streamer";
+import { applyStreamer, getStreamerStatus, getStreamerMe, updateStreamerProfile } from "../api/streamer";
 
 // Get Status
 export const useStreamerStatus = () => {
@@ -19,6 +19,42 @@ export const useApplyStreamer = () => {
         onSuccess: () => {
             // refetch status after apply
             queryClient.invalidateQueries(["streamer-status"]);
+        },
+    });
+};
+
+export const useStreamerMe = () => {
+    return useQuery({
+        queryKey: ["streamer-me"],
+        queryFn: async () => {
+            const res = await getStreamerMe();
+            return res.data;
+        },
+    });
+};
+
+
+
+
+
+// ==============================
+// UPDATE STREAMER PROFILE (SAFE)
+// ==============================
+export const useUpdateStreamerProfile = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data) => {
+            const res = await updateStreamerProfile(data);
+            return res.data;
+        },
+
+        onSuccess: () => {
+            queryClient.invalidateQueries(["streamer-me"]);
+        },
+
+        onError: (error) => {
+            console.error("STREAMER UPDATE ERROR:", error);
         },
     });
 };

@@ -18,19 +18,40 @@ import {
 } from "../../hooks/useAdminActions";
 
 const AdminProfile = () => {
-    const { data, isLoading, isError } = useProfile();
+    const { data: profileData, isLoading, isError } = useProfile();
+    const [activeTab, setActiveTab] = useState("pending");
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    const user = data?.data || {};
+    const user = profileData?.data || {};
 
     // ADMIN REQUESTS
     const {
-        data: requests = [],
+        data: requests,
         isLoading: requestsLoading,
+        isError: requestsError,
+        error: requestsErrorData,
     } = useAdminRequests();
+
+
+
+    const finalRequests = requests || [];
+
+    const pendingRequests = finalRequests.filter(
+        (r) => r.request_status === "pending"
+    );
+
+    const approvedRequests = finalRequests.filter(
+        (r) => r.request_status === "approved"
+    );
+
+    console.log("PROFILE DATA:", profileData);
+    console.log("ADMIN REQUEST RAW:", requests);
+    console.log("FINAL REQUESTS ARRAY:", finalRequests);
+    console.log("REQUEST ERROR:", requestsErrorData);
+
 
     const approveMutation = useApproveStreamer();
     const rejectMutation = useRejectStreamer();
@@ -182,6 +203,14 @@ const AdminProfile = () => {
         );
     }
 
+    if (requestsError) {
+        return (
+            <div className="px-4 pt-4 text-red-500">
+                Failed to load requests
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
@@ -290,11 +319,54 @@ const AdminProfile = () => {
                             Streamer Requests
                         </h3>
 
-                        <RequestsList
-                            requests={requests}
-                            onApprove={(id) => approveMutation.mutate(id)}
-                            onReject={(id) => rejectMutation.mutate(id)}
-                        />
+
+                        <div className="flex gap-2 mt-2">
+
+                            <button
+                                onClick={() => setActiveTab("pending")}
+                                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200
+                                ${activeTab === "pending"
+                                        ? "bg-[#e98834] text-black shadow-md"
+                                        : "bg-[#1a1a1a] text-gray-400 border border-[#2a2a2a]"
+                                    }`}
+                            >
+                                Pending ({pendingRequests.length})
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab("approved")}
+                                className={`flex-1 py-2 rounded-lg text-sm font-medium transition
+                                ${activeTab === "approved"
+                                        ? "bg-[#e98834] text-black"
+                                        : "bg-[#1a1a1a] text-white"
+                                    }`}
+                            >
+                                Approved ({approvedRequests.length})
+                            </button>
+
+                        </div>
+
+
+                        {activeTab === "pending" && (
+                            <div className="space-y-2 mt-3">
+                                <RequestsList
+                                    requests={pendingRequests}
+                                    onApprove={(id) => approveMutation.mutate(id)}
+                                    onReject={(id) => rejectMutation.mutate(id)}
+                                />
+                            </div>
+                        )}
+
+                        {activeTab === "approved" && (
+                            <div className="space-y-2 mt-3">
+                                <RequestsList
+                                    requests={approvedRequests}
+                                    onApprove={() => { }}
+                                    onReject={() => { }}
+                                    isApprovedSection={true}
+                                />
+                            </div>
+                        )}
                     </div>
 
                 </div>

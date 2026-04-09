@@ -5,10 +5,12 @@ import girl3 from "../../assets/girl3.png"
 import girl4 from "../../assets/girl4.png"
 import girl5 from "../../assets/girl5.png"
 import boy from "../../assets/boy.png"
+import { useNavigate } from "react-router-dom";
 
 import { useFeed } from "../../hooks/useFeed"
 
 const tabs = ["For you", "Trending", "Most View", "Nearby"]
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const fallbackData = [
     { image: girl1, avatar: "/avatar1.png", name: "Aishwarya", views: "12", likes: "13.25M" },
@@ -24,6 +26,7 @@ export default function Feed() {
     const [activeTab, setActiveTab] = useState("For you")
     const [showDropdown, setShowDropdown] = useState(false)
     const [selectedGlobal, setSelectedGlobal] = useState("Global")
+    const navigate = useNavigate();
 
     const dropdownOptions = ["Global", "India", "USA", "UK"]
 
@@ -35,17 +38,43 @@ export default function Feed() {
         isLoading
     } = useFeed({ activeTab, selectedGlobal })
 
-    const dynamicFeedData = data?.pages?.flatMap((page) =>
-        page?.streamers ? page.streamers : []
-    )
+    console.log("Feed data:", data);
+    console.log("FIRST PAGE:", data?.pages?.[0]);
 
-    const mappedFeed = dynamicFeedData?.map((item) => ({
-        image: item?.display_photo || "/default.png",
-        avatar: item?.display_photo || "/default.png",
-        name: item?.channel_name || "Unknown",
-        views: item?.is_live ? "Live" : "0",
-        likes: "0"
-    })) || []
+
+    const dynamicFeedData = (data?.pages || []).flatMap((page) => {
+        return page?.streamers || [];
+    });
+
+
+
+    const mappedFeed = (dynamicFeedData || []).map((item) => {
+        const validImage =
+            item?.display_photo &&
+            !item.display_photo.startsWith("blob:");
+
+        const imageUrl = validImage
+            ? item.display_photo.startsWith("http")
+                ? item.display_photo
+                : `${BASE_URL}/${item.display_photo}`
+            : "/default.png";
+
+        console.log(validImage, imageUrl);
+        console.log("Mapped item:", {
+            name: item?.channel_name,
+            display_photo: item?.display_photo,
+        });
+
+        return {
+            image: imageUrl,
+            avatar: imageUrl,
+            name: item?.channel_name || "Unknown",
+            username: item?.username,
+            is_live: item?.is_live,
+            views: item?.is_live ? "Live" : "0",
+            likes: "0",
+        };
+    });
 
     const feedList = isLoading
         ? fallbackData
@@ -129,12 +158,34 @@ export default function Feed() {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
 
                     {feedList.map((item, i) => (
-                        <div key={item.name + i} className="relative rounded-[18px] sm:rounded-[22px] overflow-hidden">
+                        <div
+                            key={item.name + i}
+                            onClick={() => {
+                                if (item.is_live && item.username) {
+                                    navigate(`/live/${item.username}`);
+                                }
+                            }}
+                            className={`relative rounded-[18px] sm:rounded-[22px] overflow-hidden 
+                            ${item.is_live ? "cursor-pointer" : "cursor-not-allowed opacity-80"}`}
+                        >
 
                             <img
                                 src={item.image}
                                 className="w-full aspect-[3/4] object-cover"
                             />
+
+                            {/* LIVE / OFFLINE BADGE */}
+                            <div className="absolute top-2 right-2">
+                                {item.is_live ? (
+                                    <span className="bg-red-500 text-white text-[9px] px-2 py-[2px] rounded-full">
+                                        LIVE
+                                    </span>
+                                ) : (
+                                    <span className="bg-gray-600 text-white text-[9px] px-2 py-[2px] rounded-full">
+                                        OFFLINE
+                                    </span>
+                                )}
+                            </div>
 
                             <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/30 backdrop-blur-[6px] px-2 py-[3px] sm:py-[4px] rounded-full text-[9px] sm:text-[10px]">
                                 <img src="/eye.png" className="w-3 h-3" />

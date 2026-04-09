@@ -6,7 +6,7 @@ export const useApproveStreamer = () => {
 
     return useMutation({
         mutationFn: (id) =>
-            api.patch(`/admin/streamer/${id}/approve`),
+            api.put(`/admin/streamer/requests/${id}/approve`),
 
         onSuccess: () => {
             queryClient.invalidateQueries(["admin-requests"]);
@@ -19,7 +19,7 @@ export const useRejectStreamer = () => {
 
     return useMutation({
         mutationFn: (id) =>
-            api.patch(`/admin/streamer/${id}/reject`),
+            api.patch(`/admin/streamer/requests/${id}/reject`),
 
         onSuccess: () => {
             queryClient.invalidateQueries(["admin-requests"]);

@@ -20,3 +20,27 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+.lk-control-bar {
+    display: none !important;
+}
+
+.lk-participant-name {
+    display: none !important;
+}
+
+.lk-focus-layout__placeholder {
+    display: none !important;
+}
+
+
+
+
+/* manjeet  */
+.lk-participant-placeholder {
+    display: none;
+}
+
+video.lk-participant-media-video {
+    height: 100vh;
+}

@@ -6,7 +6,10 @@ export const useAdminRequests = () => {
         queryKey: ["admin-requests"],
         queryFn: async () => {
             const res = await api.get("/admin/streamer/requests");
-            return res.data.data || [];
+
+            console.log("API RESPONSE:", res.data);
+
+            return res.data.requests || [];
         },
     });
 };

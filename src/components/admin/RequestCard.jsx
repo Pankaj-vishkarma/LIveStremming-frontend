@@ -1,20 +1,20 @@
-export default function RequestCard({ item, onApprove, onReject }) {
+export default function RequestCard({ item, onApprove, onReject, isApprovedSection }) {
     return (
         <div className="bg-[#1a1a1a] rounded-[18px] p-3 flex items-center justify-between">
 
             {/* LEFT */}
             <div className="flex items-center gap-2">
                 <img
-                    src={item?.avatar || "/avatar1.png"}
+                    src={item?.user?.display_photo || "/avatar1.png"}
                     className="w-8 h-8 rounded-full object-cover"
                 />
 
                 <div>
                     <p className="text-[12px] text-white">
-                        {item.channel_name}
+                        {item?.user?.username}
                     </p>
                     <p className="text-[10px] text-gray-400">
-                        {item.status}
+                        {item?.request_status}
                     </p>
                 </div>
             </div>
@@ -24,17 +24,24 @@ export default function RequestCard({ item, onApprove, onReject }) {
 
                 <button
                     onClick={() => onApprove(item._id)}
-                    className="px-3 py-1 rounded-full text-[10px] bg-green-500 text-black"
+                    disabled={item.request_status !== "pending"}
+                    className={`px-3 py-1 rounded-full text-[10px] font-medium
+                        ${item.request_status === "pending"
+                            ? "bg-green-500 text-black"
+                            : "bg-gray-500 text-black cursor-not-allowed"
+                        }`}
                 >
-                    Accept
+                    {item.request_status === "approved" ? "Approved" : "Accept"}
                 </button>
 
-                <button
-                    onClick={() => onReject(item._id)}
-                    className="px-3 py-1 rounded-full text-[10px] bg-red-500 text-white"
-                >
-                    Reject
-                </button>
+                {!isApprovedSection && item.request_status === "pending" && (
+                    <button
+                        onClick={() => onReject(item._id)}
+                        className="px-3 py-1 rounded-full text-[10px] bg-red-500 text-white"
+                    >
+                        Reject
+                    </button>
+                )}
 
             </div>
 
