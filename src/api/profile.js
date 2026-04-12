@@ -4,7 +4,7 @@ import axios from "./axios";
 export const getProfile = async () => {
     try {
         const res = await axios.get("/profile");
-        return res;
+        return res.data;
     } catch (error) {
         throw error?.response?.data || error;
     }
@@ -14,7 +14,8 @@ export const getProfile = async () => {
 export const updateProfile = async (data) => {
     try {
         const res = await axios.put("/profile", data);
-        return res;
+        console.log("Profile update response:", res);
+        return res.data;
     } catch (error) {
         throw error?.response?.data || error;
     }

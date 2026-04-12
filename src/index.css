@@ -44,3 +44,25 @@ body {
 video.lk-participant-media-video {
     height: 100vh;
 }
+
+.custom-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.custom-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+
+/* amnjeet  */
+.lk-grid-layout-wrapper .lk-participant-tile {
+    position: relative;
+    height: 100vh;
+    overflow-y: hidden;
+}
+
+.lk-grid-layout > .lk-participant-tile:nth-child(2) {
+  /* custom styling */
+  display: none; /* example: hide the second tile */
+}

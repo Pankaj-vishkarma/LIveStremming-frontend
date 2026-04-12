@@ -5,7 +5,7 @@ const Header = () => {
 
     const { data } = useProfile();
 
-    const user = data?.data || {};
+    const user = data || {};
 
     return (
         <div className="flex justify-between items-center w-full gap-2">

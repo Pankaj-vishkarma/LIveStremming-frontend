@@ -10,9 +10,16 @@ import {
     startLive,
     endLive,
 } from "../../api/liveApi";
+import LiveChat from "../../components/live/LiveChat";
+import ViewerCount from "../../components/live/ViewerCount";
+import { getSocket } from "../../socket";
+import { useLiveChat } from "../../hooks/useLiveChat";
+import { ParticipantTile, useTracks } from "@livekit/components-react";
+import { Track } from "livekit-client";
 
 export default function LiveRoom() {
     const { username } = useParams();
+    console.log("LiveRoom params:", username);
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
 
@@ -22,34 +29,57 @@ export default function LiveRoom() {
     const [isHost, setIsHost] = useState(false);
     const hasStartedRef = useRef(false);
 
-    // CHAT STATE (DUMMY)
-    const [messages, setMessages] = useState([
-        { id: 1, user: "rahul", text: "🔥 Nice stream!" },
-        { id: 2, user: "aman", text: "Camera clear hai 👌" },
-    ]);
-    const [input, setInput] = useState("");
-    const chatEndRef = useRef(null);
+    // SOCKET INIT
+    const socketRef = useRef(null);
 
-    // auto scroll chat
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    if (!socketRef.current) {
+        socketRef.current = getSocket();
+    }
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+    const socket = socketRef.current;
 
-        setMessages((prev) => [
-            ...prev,
-            {
-                id: Date.now(),
-                user: user?.data?.username || "me",
-                text: input,
-            },
+    // LIVE CHAT HOOK
+    const {
+        messages,
+        sendMessage,
+        viewerCount,
+    } = useLiveChat(socket, username, {
+        id: user?._id,
+        username: user?.username,
+        avatar: user?.avatar,
+    });
+
+    function VideoRenderer() {
+        const tracks = useTracks([
+            { source: Track.Source.Camera, withPlaceholder: true },
         ]);
 
-        setInput("");
-    };
+        if (!tracks || tracks.length === 0) {
+            return (
+                <div className="w-full h-full flex items-center justify-center text-white">
+                    Waiting for streamer...
+                </div>
+            );
+        }
 
+        return (
+            <>
+                {tracks.map((track, index) => {
+                    if (!track?.publication) return null;
+
+                    return (
+                        <ParticipantTile
+                            key={track.publication.trackSid || index}
+                            trackRef={track}
+                        />
+                    );
+                })}
+            </>
+        );
+    }
+
+
+    //  LIVE INIT 
     useEffect(() => {
         if (!user) return;
 
@@ -62,8 +92,7 @@ export default function LiveRoom() {
             try {
                 let response;
 
-                // SAME LOGIC (UNCHANGED)
-                const host = user?.data?.role === "streamer";
+                const host = user?.role === "streamer";
                 if (isMounted) setIsHost(host);
 
                 if (host) {
@@ -109,6 +138,25 @@ export default function LiveRoom() {
         }
     };
 
+    // AUTO EXIT WHEN STREAM ENDS
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleStreamEnd = (channelName) => {
+            if (channelName === username) {
+                console.log("🚪 Stream ended, exiting room...");
+
+                navigate(-1);
+            }
+        };
+
+        socket.on("streamer:offline", handleStreamEnd);
+
+        return () => {
+            socket.off("streamer:offline", handleStreamEnd);
+        };
+    }, [socket, username, navigate]);
+
     // LOADING
     if (loading) {
         return (
@@ -135,27 +183,31 @@ export default function LiveRoom() {
 
     return (
         <div className="w-full min-h-screen bg-black flex justify-center">
-            <div className="w-full max-w-[412px] h-screen relative overflow-hidden">
+            <div className="w-full max-w-[412px] h-screen relative overflow-hidden bg-black">
 
-                {/* 🎥 LIVE VIDEO */}
+                {/* LIVE VIDEO */}
                 <LiveKitRoom
                     serverUrl={url}
                     token={token}
                     connect={true}
                     video={isHost}
                     audio={isHost}
-                    className="h-full w-full"
+                    connectOptions={{ autoSubscribe: true }}
+                    className="absolute inset-0 w-full h-full z-0"
                 >
-                    <VideoConference />
+                    <VideoRenderer />
                 </LiveKitRoom>
 
                 {/* TOP BAR */}
                 <div className="absolute top-3 left-3 right-3 flex justify-between z-50">
-                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur px-3 py-1 rounded-full text-xs">
+                    <div className="flex items-center gap-2 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs">
                         <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                         <span className="text-white">
                             {isHost ? "You are Live" : "Live"}
                         </span>
+
+                        {/* VIEWER COUNT ADDED */}
+                        <ViewerCount count={viewerCount} />
                     </div>
 
                     <button
@@ -167,40 +219,15 @@ export default function LiveRoom() {
                 </div>
 
                 {/* CHAT */}
-                <div className="absolute bottom-24 left-3 right-3 z-50 max-h-[35%] overflow-y-auto">
-                    <div className="space-y-1 text-xs">
-                        {messages.map((msg) => (
-                            <div key={msg.id} className="text-white">
-                                <span className="font-semibold mr-1">
-                                    {msg.user}:
-                                </span>
-                                {msg.text}
-                            </div>
-                        ))}
-                        <div ref={chatEndRef} />
-                    </div>
-                </div>
 
-                {/* INPUT */}
-                <div className="absolute bottom-3 left-3 right-3 z-50 flex gap-2">
-                    <input
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type a message..."
-                        className="flex-1 bg-black/40 backdrop-blur px-3 py-2 rounded-full text-white text-sm outline-none"
-                    />
-
-                    <button
-                        onClick={handleSend}
-                        className="px-4 bg-[#ff2d55] rounded-full text-white text-sm"
-                    >
-                        Send
-                    </button>
-                </div>
+                <LiveChat
+                    messages={messages}
+                    onSend={sendMessage}
+                />
 
                 {/* STREAM INFO */}
-                <div className="absolute bottom-16 left-3 z-50">
-                    <div className="bg-black/40 backdrop-blur px-3 py-2 rounded-full flex items-center gap-2">
+                <div className="absolute bottom-[80px] right-3 z-[60]">
+                    <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-full flex items-center gap-2">
                         <img
                             src="/avatar1.png"
                             className="w-7 h-7 rounded-full"

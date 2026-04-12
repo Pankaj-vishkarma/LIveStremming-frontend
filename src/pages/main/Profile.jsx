@@ -7,6 +7,7 @@ export default function Profile() {
     const { user, isAuthChecked } = useSelector((state) => state.auth);
 
 
+
     // wait for auth check
     if (!isAuthChecked) {
         return (
@@ -19,12 +20,12 @@ export default function Profile() {
     }
 
     // Admin
-    if (user.data?.role === "admin") {
+    if (user.role === "admin") {
         return <AdminProfile />;
     }
 
     // Streamer
-    if (user.data?.role === "streamer") {
+    if (user.role === "streamer") {
         return <StreamerProfile />;
     }
 

@@ -63,7 +63,7 @@ export default function Profile({ onFinish }) {
                 try {
                     uploadRes = await uploadImageMutation(image);
                 } catch (err) {
-                    setError("Image upload failed");
+                    setError(err?.message || "Image upload failed");
                     return;
                 }
             }
@@ -74,10 +74,12 @@ export default function Profile({ onFinish }) {
             };
 
             // add image data
-            if (uploadRes) {
+            if (uploadRes?.url && uploadRes?.public_id) {
                 payload.display_photo = uploadRes.url;
                 payload.display_photo_public_id = uploadRes.public_id;
             }
+
+            console.log("Payload for profile update:", payload);
 
             // update profile
             updateProfile(payload, {
@@ -86,7 +88,7 @@ export default function Profile({ onFinish }) {
                 },
                 onError: (err) => {
                     setError(
-                        err?.response?.data?.message ||
+                        err?.message ||
                         "Failed to update profile"
                     );
                 },

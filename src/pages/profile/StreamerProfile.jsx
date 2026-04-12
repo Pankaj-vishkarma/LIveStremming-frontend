@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import avatarFallback from "../../assets/avatar.png";
 import { useNavigate } from "react-router-dom";
-import { logoutUser } from "../../api/auth";
+import { useLogout } from "../../hooks/useLogout";
 
 import { useStreamerMe, useUpdateStreamerProfile } from "../../hooks/useStreamer";
 import { useUpdateProfile } from "../../hooks/useProfile";
@@ -15,6 +15,7 @@ const StreamerProfile = () => {
     const { data, isLoading } = useStreamerMe();
     const { mutate: updateStreamer, isPending: streamerLoading } = useUpdateStreamerProfile();
     const { mutate: updateUser, isPending: userLoading } = useUpdateProfile();
+    const { mutate: logout } = useLogout();
 
     const [form, setForm] = useState({
         username: "",
@@ -25,12 +26,11 @@ const StreamerProfile = () => {
         categories: "",
     });
 
-    const [previewImage, setPreviewImage] = useState(""); // ✅ NEW
+    const [previewImage, setPreviewImage] = useState("");
     const [isEdit, setIsEdit] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
     const [liveLoading, setLiveLoading] = useState(false);
 
-    // 🔥 DATA LOAD (Backend → UI)
     useEffect(() => {
         if (data) {
             setForm({
@@ -42,11 +42,11 @@ const StreamerProfile = () => {
                 categories: data.categories?.join(", ") || "",
             });
 
-            setPreviewImage(""); // 🔥 reset preview (IMPORTANT)
+            setPreviewImage("");
         }
     }, [data]);
 
-    // 🔥 MEMORY CLEANUP (blob)
+
     useEffect(() => {
         return () => {
             if (previewImage) {
@@ -59,7 +59,7 @@ const StreamerProfile = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // IMAGE CLICK
+
     const handleImageClick = () => {
         if (isEdit) {
             fileRef.current.click();
@@ -73,7 +73,7 @@ const StreamerProfile = () => {
         const file = e.target.files[0];
         if (file) {
             const preview = URL.createObjectURL(file);
-            setPreviewImage(preview); // ✅ FIX
+            setPreviewImage(preview);
         }
     };
 
@@ -84,7 +84,6 @@ const StreamerProfile = () => {
         if (form.about_me?.trim())
             userPayload.about_me = form.about_me.trim();
 
-        // ❌ blob save mat karo
         if (!previewImage && form.display_photo) {
             userPayload.display_photo = form.display_photo;
         }
@@ -136,14 +135,14 @@ const StreamerProfile = () => {
     };
 
     // LOGOUT
-    const handleLogout = async () => {
-        try {
-            await logoutUser();
-            localStorage.clear();
-            navigate("/");
-        } catch (err) {
-            console.error("LOGOUT ERROR:", err);
-        }
+    const handleLogout = () => {
+        logout(undefined, {
+            onSuccess: () => {
+                dispatch({ type: "auth/logout" });
+
+                navigate("/", { replace: true });
+            },
+        });
     };
 
     if (isLoading) {

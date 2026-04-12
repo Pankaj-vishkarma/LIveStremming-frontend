@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useProfile } from "../../hooks/useProfile";
+import { useLogout } from "../../hooks/useLogout";
 import avatarFallback from "../../assets/avatar.png";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -16,9 +17,13 @@ const UserProfile = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { mutate: logout } = useLogout();
 
-    const user = data?.data || {};
+    const user = data || {};
 
+    console.log("PROFILE RAW:", data);
+    console.log("USER FIXED:", user);
+    console.log("IMAGE URL:", user.display_photo);
     const [isEditing, setIsEditing] = useState(false);
     const [showAvatarModal, setShowAvatarModal] = useState(false);
 
@@ -75,30 +80,41 @@ const UserProfile = () => {
             if (!trimmedBio) return setBioError("Bio cannot be empty");
 
             let imageUrl = user?.display_photo;
+            let publicId = user?.display_photo_public_id;
 
-            //  upload only on save
+            // upload image
             if (selectedFile) {
                 setUploading(true);
+
                 const uploadRes = await uploadImage(selectedFile);
+
+                console.log("uploadRes:", uploadRes);
+
                 imageUrl = uploadRes.url;
+                publicId = uploadRes.public_id;
             }
 
+            // update cache
             queryClient.setQueryData(["profile"], (oldData) => {
                 if (!oldData) return oldData;
+
                 return {
                     ...oldData,
                     data: {
                         ...oldData.data,
                         about_me: trimmedBio,
                         display_photo: imageUrl,
+                        display_photo_public_id: publicId,
                     },
                 };
             });
 
+            // update backend
             await updateProfile({
                 ...formData,
                 about_me: trimmedBio,
                 display_photo: imageUrl,
+                display_photo_public_id: publicId,
             });
 
             queryClient.invalidateQueries(["profile"]);
@@ -109,7 +125,7 @@ const UserProfile = () => {
             setBioError("");
 
         } catch (error) {
-            console.error(error);
+            console.error("SAVE ERROR:", error);
             queryClient.invalidateQueries(["profile"]);
         } finally {
             setUploading(false);
@@ -139,14 +155,14 @@ const UserProfile = () => {
         setBioError("");
     };
 
-    const handleLogout = async () => {
-        try {
-            await axios.post("/auth/logout");
-        } catch { }
+    const handleLogout = () => {
+        logout(undefined, {
+            onSuccess: () => {
+                dispatch({ type: "auth/logout" });
 
-        queryClient.clear();
-        dispatch({ type: "auth/logout" });
-        navigate("/", { replace: true });
+                navigate("/", { replace: true });
+            },
+        });
     };
 
     if (isLoading) {

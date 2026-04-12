@@ -19,9 +19,9 @@ const BottomNav = () => {
                 </div>
 
                 <div
-                    onClick={() => navigate("/streamers")}
+                    onClick={() => navigate("/discover")}
                     className={`flex flex-col items-center text-[10px] sm:text-xs cursor-pointer gap-[2px]
-                    ${location.pathname === "/streamers" ? "text-[#e98834]" : "text-gray-400"}`}
+                    ${location.pathname === "/discover" ? "text-[#e98834]" : "text-gray-400"}`}
                 >
                     <img src="/discover.png" className="w-5 h-5 sm:w-[22px] sm:h-[22px]" />
                     <span>Discover</span>

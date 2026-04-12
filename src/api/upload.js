@@ -11,10 +11,13 @@ export const uploadImage = async (file) => {
             },
         });
 
-        // FIXED
+        console.log("FULL RESPONSE:", res);
+
+        const responseData = res.data || res;
+
         return {
-            url: res.url,
-            public_id: res.public_id,
+            url: responseData.url,
+            public_id: responseData.public_id,
         };
 
     } catch (error) {

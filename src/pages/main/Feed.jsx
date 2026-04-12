@@ -1,31 +1,32 @@
 import { useState, useEffect, useRef } from "react"
-import girl1 from "../../assets/girl1.png"
-import girl2 from "../../assets/girl2.png"
-import girl3 from "../../assets/girl3.png"
-import girl4 from "../../assets/girl4.png"
-import girl5 from "../../assets/girl5.png"
-import boy from "../../assets/boy.png"
 import { useNavigate } from "react-router-dom";
-
 import { useFeed } from "../../hooks/useFeed"
+import { useSocket } from "../../hooks/useSocket";
+
 
 const tabs = ["For you", "Trending", "Most View", "Nearby"]
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const fallbackData = [
-    { image: girl1, avatar: "/avatar1.png", name: "Aishwarya", views: "12", likes: "13.25M" },
-    { image: girl2, avatar: "/avatar3.png", name: "Sofia", views: "18", likes: "9.8M" },
-    { image: girl3, avatar: "/avatar3.png", name: "Nisha", views: "10", likes: "7.2M" },
-    { image: girl4, avatar: "/avatar6.png", name: "Elena", views: "22", likes: "15.4M" },
-    { image: boy, avatar: "/avatar1.png", name: "Ryan", views: "30", likes: "20.2M" },
-    { image: girl5, avatar: "/avatar6.png", name: "Priya", views: "8", likes: "5.1M" }
-]
+const getImageUrl = (photo) => {
+    if (!photo) return "/default.png";
+
+    return photo.startsWith("http")
+        ? photo
+        : `${BASE_URL}/${photo}`;
+};
 
 export default function Feed() {
+
+
 
     const [activeTab, setActiveTab] = useState("For you")
     const [showDropdown, setShowDropdown] = useState(false)
     const [selectedGlobal, setSelectedGlobal] = useState("Global")
+    const socket = useSocket();
+
+    // LOCAL LIVE STATE
+    const [liveStreamers, setLiveStreamers] = useState([])
+
     const navigate = useNavigate();
 
     const dropdownOptions = ["Global", "India", "USA", "UK"]
@@ -38,49 +39,92 @@ export default function Feed() {
         isLoading
     } = useFeed({ activeTab, selectedGlobal })
 
-    console.log("Feed data:", data);
-    console.log("FIRST PAGE:", data?.pages?.[0]);
-
-
-    const dynamicFeedData = (data?.pages || []).flatMap((page) => {
-        return page?.streamers || [];
-    });
-
-
-
-    const mappedFeed = (dynamicFeedData || []).map((item) => {
-        const validImage =
-            item?.display_photo &&
-            !item.display_photo.startsWith("blob:");
-
-        const imageUrl = validImage
-            ? item.display_photo.startsWith("http")
-                ? item.display_photo
-                : `${BASE_URL}/${item.display_photo}`
-            : "/default.png";
-
-        console.log(validImage, imageUrl);
-        console.log("Mapped item:", {
-            name: item?.channel_name,
-            display_photo: item?.display_photo,
+    // INITIAL LOAD
+    useEffect(() => {
+        const dynamicFeedData = (data?.pages || []).flatMap((page) => {
+            return page?.streamers || [];
         });
 
-        return {
-            image: imageUrl,
-            avatar: imageUrl,
+        const mapped = dynamicFeedData.map((item) => ({
+            image: getImageUrl(item?.display_photo),
+            avatar: getImageUrl(item?.display_photo),
             name: item?.channel_name || "Unknown",
             username: item?.username,
+            channel_name: item?.channel_name,
             is_live: item?.is_live,
             views: item?.is_live ? "Live" : "0",
             likes: "0",
-        };
-    });
+        }));
 
-    const feedList = isLoading
-        ? fallbackData
-        : mappedFeed?.length
-            ? mappedFeed
-            : fallbackData
+        // ✅ merge instead of overwrite
+        setLiveStreamers((prev) => {
+            const live = mapped.filter((item) => item.is_live);
+
+            const merged = [...prev];
+
+            live.forEach((item) => {
+                if (!merged.find((m) => m.username === item.username)) {
+                    merged.push(item);
+                }
+            });
+
+            return merged;
+        });
+
+    }, [data]);
+
+    // SOCKET LISTENERS
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleLive = (streamer) => {
+            try {
+                if (!streamer?.username || !streamer?.channel_name) {
+                    console.warn("Invalid streamer data:", streamer);
+                    return;
+                }
+
+                setLiveStreamers((prev) => {
+                    const exists = prev.find((s) => s.username === streamer.username);
+                    if (exists) return prev;
+
+                    return [
+                        {
+                            image: getImageUrl(streamer.display_photo),
+                            avatar: getImageUrl(streamer.display_photo),
+                            name: streamer.channel_name,
+                            username: streamer.username,
+                            channel_name: streamer.channel_name,
+                            views: "Live",
+                            likes: "0",
+                            is_live: true,
+                        },
+                        ...prev,
+                    ];
+                });
+            } catch (err) {
+                console.error("LIVE SOCKET ERROR:", err);
+            }
+        };
+
+        const handleOffline = (username) => {
+            try {
+                setLiveStreamers((prev) =>
+                    prev.filter((s) => s.username !== username)
+                );
+            } catch (err) {
+                console.error("OFFLINE SOCKET ERROR:", err);
+            }
+        };
+
+        socket.on("streamer:live", handleLive);
+        socket.on("streamer:offline", handleOffline);
+
+        return () => {
+            socket.off("streamer:live", handleLive);
+            socket.off("streamer:offline", handleOffline);
+        };
+    }, [socket]);
 
     const loadMoreRef = useRef(null)
 
@@ -149,24 +193,24 @@ export default function Feed() {
 
                             </div>
                         )}
-
                     </div>
-
                 </div>
+
+                {/* EMPTY STATE */}
+                {!isLoading && liveStreamers.length === 0 && (
+                    <div className="flex justify-center items-center h-[60vh] text-gray-400 text-sm">
+                        No users are online right now.
+                    </div>
+                )}
 
                 {/* GRID */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
 
-                    {feedList.map((item, i) => (
+                    {liveStreamers.map((item, i) => (
                         <div
-                            key={item.name + i}
-                            onClick={() => {
-                                if (item.is_live && item.username) {
-                                    navigate(`/live/${item.username}`);
-                                }
-                            }}
-                            className={`relative rounded-[18px] sm:rounded-[22px] overflow-hidden 
-                            ${item.is_live ? "cursor-pointer" : "cursor-not-allowed opacity-80"}`}
+                            key={item.username + i}
+                            onClick={() => navigate(`/live/${item.channel_name}`)}
+                            className="relative rounded-[18px] sm:rounded-[22px] overflow-hidden cursor-pointer"
                         >
 
                             <img
@@ -174,60 +218,46 @@ export default function Feed() {
                                 className="w-full aspect-[3/4] object-cover"
                             />
 
-                            {/* LIVE / OFFLINE BADGE */}
                             <div className="absolute top-2 right-2">
-                                {item.is_live ? (
-                                    <span className="bg-red-500 text-white text-[9px] px-2 py-[2px] rounded-full">
-                                        LIVE
-                                    </span>
-                                ) : (
-                                    <span className="bg-gray-600 text-white text-[9px] px-2 py-[2px] rounded-full">
-                                        OFFLINE
-                                    </span>
-                                )}
+                                <span className="bg-red-500 text-white text-[9px] px-2 py-[2px] rounded-full">
+                                    LIVE
+                                </span>
                             </div>
 
-                            <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/30 backdrop-blur-[6px] px-2 py-[3px] sm:py-[4px] rounded-full text-[9px] sm:text-[10px]">
+                            <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/30 backdrop-blur-[6px] px-2 py-[3px] rounded-full text-[9px]">
                                 <img src="/eye.png" className="w-3 h-3" />
                                 <span className="text-white">{item.views}</span>
                             </div>
 
-                            <div className="absolute bottom-0 left-0 right-0 px-2 sm:px-3 pb-2 sm:pb-3 pt-6 sm:pt-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
+                            <div className="absolute bottom-0 left-0 right-0 px-2 pb-2 pt-6 bg-gradient-to-t from-black/80 to-transparent">
 
                                 <div className="flex items-center gap-2 bg-[#00000042] px-[7px] py-[7px] rounded-[23px]">
                                     <img
                                         src={item.avatar}
-                                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover"
+                                        className="w-5 h-5 rounded-full object-cover"
                                     />
 
-                                    <div className="leading-tight">
-                                        <p className="text-[11px] sm:text-[12px] text-white font-medium">
+                                    <div>
+                                        <p className="text-[11px] text-white font-medium">
                                             {item.name}
                                         </p>
 
-                                        <p className="text-[9px] sm:text-[10px] text-gray-400">
+                                        <p className="text-[9px] text-gray-400">
                                             {item.likes}
                                         </p>
                                     </div>
 
                                 </div>
-
                             </div>
 
                         </div>
                     ))}
-
                 </div>
 
-                {/* LOAD MORE */}
                 <div ref={loadMoreRef} className="h-5" />
 
                 {isFetchingNextPage && (
                     <p className="text-center text-xs text-gray-400">Loading more...</p>
-                )}
-
-                {!hasNextPage && !isLoading && (
-                    <p className="text-center text-xs text-gray-500">No more data</p>
                 )}
 
             </div>

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { updateProfile } from "../../api/profile";
+import { useLogout } from "../../hooks/useLogout";
 import { uploadImage } from "../../api/upload";
 import axios from "../../api/axios";
 
@@ -24,8 +25,10 @@ const AdminProfile = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { mutate: logout } = useLogout();
 
-    const user = profileData?.data || {};
+    const user = profileData || {};
+    console.log("PROFILE HOOK DATA:", profileData);
 
     // ADMIN REQUESTS
     const {
@@ -178,14 +181,14 @@ const AdminProfile = () => {
     };
 
     // ================= LOGOUT =================
-    const handleLogout = async () => {
-        try {
-            await axios.post("/auth/logout");
-        } catch { }
+    const handleLogout = () => {
+        logout(undefined, {
+            onSuccess: () => {
+                dispatch({ type: "auth/logout" });
 
-        queryClient.clear();
-        dispatch({ type: "auth/logout" });
-        navigate("/", { replace: true });
+                navigate("/", { replace: true });
+            },
+        });
     };
 
     // ================= STATES =================
