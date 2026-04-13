@@ -10,6 +10,7 @@ import {
     startLive,
     endLive,
 } from "../../api/liveApi";
+import GiftPanel from "../../components/live/GiftPanel";
 import LiveChat from "../../components/live/LiveChat";
 import ViewerCount from "../../components/live/ViewerCount";
 import { getSocket } from "../../socket";
@@ -22,6 +23,8 @@ export default function LiveRoom() {
     console.log("LiveRoom params:", username);
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
+    const [openGift, setOpenGift] = useState(false);
+    const [giftAnimation, setGiftAnimation] = useState(null);
 
     const [token, setToken] = useState(null);
     const [url, setUrl] = useState("");
@@ -37,6 +40,13 @@ export default function LiveRoom() {
     }
 
     const socket = socketRef.current;
+
+
+    useEffect(() => {
+        if (!socket || !username) return;
+
+        socket.emit("join:room", username);
+    }, [socket, username]);
 
     // LIVE CHAT HOOK
     const {
@@ -157,6 +167,46 @@ export default function LiveRoom() {
         };
     }, [socket, username, navigate]);
 
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleGift = (data) => {
+            setGiftAnimation({ ...data, id: Date.now() });
+
+            // remove after 3 sec
+            setTimeout(() => {
+                setGiftAnimation(null);
+            }, 3000);
+        };
+
+        socket.on("gift:received", handleGift);
+
+        return () => {
+            socket.off("gift:received", handleGift);
+        };
+    }, [socket]);
+
+    useEffect(() => {
+        const handleLocalGift = (e) => {
+            const gift = e.detail;
+
+            setGiftAnimation({
+                giftName: gift.name,
+                giftIcon: gift.icon,
+            });
+
+            setTimeout(() => {
+                setGiftAnimation(null);
+            }, 3000);
+        };
+
+        window.addEventListener("gift:local", handleLocalGift);
+
+        return () => {
+            window.removeEventListener("gift:local", handleLocalGift);
+        };
+    }, []);
+
     // LOADING
     if (loading) {
         return (
@@ -206,7 +256,6 @@ export default function LiveRoom() {
                             {isHost ? "You are Live" : "Live"}
                         </span>
 
-                        {/* VIEWER COUNT ADDED */}
                         <ViewerCount count={viewerCount} />
                     </div>
 
@@ -219,14 +268,13 @@ export default function LiveRoom() {
                 </div>
 
                 {/* CHAT */}
-
                 <LiveChat
                     messages={messages}
                     onSend={sendMessage}
                 />
 
                 {/* STREAM INFO */}
-                <div className="absolute bottom-[80px] right-3 z-[60]">
+                <div className="absolute bottom-[80px] right-3 z-50">
                     <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-full flex items-center gap-2">
                         <img
                             src="/avatar1.png"
@@ -235,6 +283,45 @@ export default function LiveRoom() {
                         <span className="text-white text-sm">{username}</span>
                     </div>
                 </div>
+
+                {/* GIFT BUTTON */}
+                <div className="absolute bottom-[80px] left-3 z-50">
+                    <button
+                        onClick={() => setOpenGift(true)}
+                        className="bg-[#1a1a1a] backdrop-blur px-3 py-2 rounded-full flex items-center gap-2 shadow-lg active:scale-95 transition"
+                    >
+                        <span className="text-white text-sm">🎁</span>
+                    </button>
+                </div>
+
+                {/*GIFT PANEL*/}
+                <GiftPanel
+                    isOpen={openGift}
+                    onClose={() => setOpenGift(false)}
+                    username={username}
+                />
+
+                {/* GIFT ANIMATION */}
+                {giftAnimation && (
+                    <div
+                        key={giftAnimation.id}
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none z-[70]"
+                    >
+                        <div className="flex flex-col items-center animate-bounce">
+
+                            <img
+                                src={giftAnimation.giftIcon}
+                                alt="gift"
+                                className="w-20 h-20 object-contain animate-[spin_2s_linear_infinite]"
+                            />
+
+                            <p className="text-white text-sm mt-2 bg-black/60 px-3 py-1 rounded-full">
+                                🎁 {giftAnimation.giftName}
+                            </p>
+
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>
