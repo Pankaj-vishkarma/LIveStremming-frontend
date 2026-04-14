@@ -8,7 +8,7 @@ import { store } from "./store";
 import { registerSW } from "virtual:pwa-register";
 import "./index.css";
 
-// ✅ EXPORT (IMPORTANT 🔥)
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,7 +21,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-// ✅ PWA
+// PWA
 registerSW({ immediate: true });
 
 ReactDOM.createRoot(document.getElementById("root")).render(

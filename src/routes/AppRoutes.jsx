@@ -5,6 +5,7 @@ import Messages from "../pages/main/Messages";
 import Profile from "../pages/main/Profile";
 import LiveRoom from "../pages/live/LiveRoom";
 import Discover from "../pages/main/Discover";
+import Wallet from "../pages/main/Wallet";
 
 import ProtectedRoute from "./ProtectedRoute";
 import { useProfile } from "../hooks/useProfile";
@@ -56,6 +57,7 @@ export default function AppRoutes() {
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/discover" element={<Discover />} />
+                <Route path="/wallet" element={<Wallet />} />
             </Route>
 
         </Routes>

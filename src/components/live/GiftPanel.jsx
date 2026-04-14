@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { getGifts, sendGift } from "../../api/gifts";
+import { useSendGift } from "../../hooks/useSendGift";
 
 export default function GiftPanel({ isOpen, onClose, username }) {
     const [gifts, setGifts] = useState([]);
     const [selectedGift, setSelectedGift] = useState(null);
     const [loading, setLoading] = useState(false);
+    const { mutate: sendGiftMutation, isPending } = useSendGift();
 
     // Fetch gifts
     useEffect(() => {
@@ -23,29 +25,24 @@ export default function GiftPanel({ isOpen, onClose, username }) {
     }, [isOpen]);
 
     // Send gift
-    const handleSend = async () => {
+    const handleSend = () => {
         if (!selectedGift) return;
 
-        try {
-            setLoading(true);
+        sendGiftMutation({
+            username,
+            giftId: selectedGift._id,
+            gift: selectedGift,
+        });
 
-            await sendGift(username, selectedGift._id);
+        // animation (same)
+        window.dispatchEvent(
+            new CustomEvent("gift:local", {
+                detail: selectedGift,
+            })
+        );
 
-            // LOCAL ANIMATION TRIGGER 
-            window.dispatchEvent(
-                new CustomEvent("gift:local", {
-                    detail: selectedGift,
-                })
-            );
-
-            setSelectedGift(null);
-            onClose();
-
-        } catch (err) {
-            console.error("Send gift error:", err);
-        } finally {
-            setLoading(false);
-        }
+        setSelectedGift(null);
+        onClose();
     };
 
     return (
@@ -88,7 +85,7 @@ export default function GiftPanel({ isOpen, onClose, username }) {
                                 key={gift._id}
                                 onClick={() => setSelectedGift(gift)}
                                 className={`flex flex-col items-center p-2 rounded-[14px] cursor-pointer transition-all
-                ${selectedGift?._id === gift._id
+                                ${selectedGift?._id === gift._id
                                         ? "bg-[#e98834] scale-105"
                                         : "bg-[#1a1a1a]"
                                     }`}
@@ -111,14 +108,14 @@ export default function GiftPanel({ isOpen, onClose, username }) {
                     {/* SEND BUTTON */}
                     <button
                         onClick={handleSend}
-                        disabled={!selectedGift || loading}
+                        disabled={!selectedGift || isPending}
                         className={`w-full py-2 rounded-full text-sm font-medium transition
-            ${selectedGift
+                        ${selectedGift
                                 ? "bg-[#e98834] text-black"
                                 : "bg-gray-700 text-gray-400"
                             }`}
                     >
-                        {loading ? "Sending..." : "Send Gift"}
+                        {isPending ? "Sending..." : "Send Gift"}
                     </button>
                 </div>
             </div>

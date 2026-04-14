@@ -16,6 +16,7 @@ import ViewerCount from "../../components/live/ViewerCount";
 import { getSocket } from "../../socket";
 import { useLiveChat } from "../../hooks/useLiveChat";
 import { ParticipantTile, useTracks } from "@livekit/components-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Track } from "livekit-client";
 
 export default function LiveRoom() {
@@ -31,6 +32,7 @@ export default function LiveRoom() {
     const [loading, setLoading] = useState(true);
     const [isHost, setIsHost] = useState(false);
     const hasStartedRef = useRef(false);
+    const queryClient = useQueryClient();
 
     // SOCKET INIT
     const socketRef = useRef(null);
@@ -43,10 +45,24 @@ export default function LiveRoom() {
 
 
     useEffect(() => {
-        if (!socket || !username) return;
+        if (!socket) return;
 
-        socket.emit("join:room", username);
-    }, [socket, username]);
+        const handleGift = (data) => {
+            setGiftAnimation({ ...data, id: Date.now() });
+
+            setTimeout(() => {
+                setGiftAnimation(null);
+            }, 3000);
+
+            queryClient.invalidateQueries({ queryKey: ["wallet"] });
+        };
+
+        socket.on("gift:received", handleGift);
+
+        return () => {
+            socket.off("gift:received", handleGift);
+        };
+    }, [socket, queryClient]);
 
     // LIVE CHAT HOOK
     const {

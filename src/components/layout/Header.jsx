@@ -1,11 +1,18 @@
 import avatarFallback from "../../assets/avatar.png";
 import { useProfile } from "../../hooks/useProfile";
+import { useNavigate } from "react-router-dom";
+import { useWallet } from "../../hooks/useWallet";
 
 const Header = () => {
 
     const { data } = useProfile();
-
     const user = data || {};
+    const { data: wallet } = useWallet();
+    const navigate = useNavigate();
+    const isStreamer = user?.role === "streamer";
+    const displayBalance = isStreamer
+        ? wallet?.streamer_earnings || 0
+        : wallet?.viewer_balance || 0;
 
     return (
         <div className="flex justify-between items-center w-full gap-2">
@@ -14,8 +21,9 @@ const Header = () => {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
 
                 <img
+                    onClick={() => navigate("/profile")}
                     src={user?.display_photo || avatarFallback}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0 cursor-pointer"
                 />
 
                 <div className="leading-tight min-w-0">
@@ -34,12 +42,15 @@ const Header = () => {
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
 
                 {/* COINS */}
-                <div className="flex items-center gap-1.5 sm:gap-2 bg-[#2a1b12] px-2 sm:px-3 py-1 rounded-full">
+                <div
+                    onClick={() => navigate("/wallet")}
+                    className="flex items-center gap-1.5 sm:gap-2 bg-[#2a1b12] px-2 sm:px-3 py-1 rounded-full cursor-pointer"
+                >
 
                     <img src="/coin.png" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
 
                     <span className="text-[10px] sm:text-xs text-white">
-                        0
+                        {displayBalance}
                     </span>
 
                     <div className="bg-[#e98834] w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-black text-[10px] sm:text-xs font-bold">

@@ -47,20 +47,20 @@ export const useLiveChat = (socket, roomId, user) => {
     const sendMessage = (text) => {
         if (!text.trim()) return;
 
-        console.log("📤 UI CLICKED SEND");
+        console.log(" UI CLICKED SEND");
 
         if (!socket) {
-            console.log("❌ Socket is NULL");
+            console.log(" Socket is NULL");
             return;
         }
 
         if (!socket.connected) {
-            console.log("❌ Socket NOT connected");
+            console.log(" Socket NOT connected");
             return;
         }
 
         if (!roomId) {
-            console.log("❌ RoomId missing");
+            console.log(" RoomId missing");
             return;
         }
 
@@ -71,7 +71,7 @@ export const useLiveChat = (socket, roomId, user) => {
             text,
         };
 
-        console.log("📤 EMITTING EVENT:", {
+        console.log(" EMITTING EVENT:", {
             roomId,
             message,
         });
@@ -81,7 +81,7 @@ export const useLiveChat = (socket, roomId, user) => {
             message,
         });
 
-        console.log("✅ emit called");
+        console.log("emit called");
     };
 
     return {
