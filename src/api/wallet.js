@@ -46,3 +46,14 @@ export const withdrawApi = async (data) => {
   const res = await axios.post("/wallet/withdraw", data);
   return res.data;
 };
+
+// ==========================
+// CREATE STRIPE CHECKOUT SESSION
+// ==========================
+export const createCheckoutSessionApi = async (data) => {
+  const res = await axios.post(
+    "/wallet/create-checkout-session",
+    data
+  );
+  return res;
+};

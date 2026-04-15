@@ -12,6 +12,13 @@ export default function Wallet() {
 
     const user = useSelector((state) => state.auth.user);
 
+    const getStatusColor = (status) => {
+        if (status === "SUCCESS") return "text-green-400";
+        if (status === "PENDING") return "text-yellow-400";
+        if (status === "FAILED") return "text-red-400";
+        return "text-gray-400";
+    };
+
     //  React Query - Wallet
     const { data: walletData, isLoading } = useWallet();
 
@@ -117,6 +124,12 @@ export default function Wallet() {
                                 <p className="text-white text-[11px] font-medium">
                                     {tx.type.replace("_", " ").toUpperCase()}
                                 </p>
+
+                                {/* STATUS LINE */}
+                                <p className={`text-[9px] ${getStatusColor(tx.status)}`}>
+                                    {tx.status}
+                                </p>
+
                                 <p className="text-gray-400 text-[9px]">
                                     {
                                         tx?.createdAt

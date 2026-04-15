@@ -24,8 +24,7 @@ export default function TopupForm({ onClose }) {
             amount,
             {
                 onSuccess: () => {
-                    console.log("Topup success");
-                    onClose();
+                    console.log("Redirecting to payment...");
                 },
                 onError: (err) => {
                     console.error("Topup error:", err);

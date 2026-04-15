@@ -6,10 +6,13 @@ import Profile from "../pages/main/Profile";
 import LiveRoom from "../pages/live/LiveRoom";
 import Discover from "../pages/main/Discover";
 import Wallet from "../pages/main/Wallet";
+import Success from "../pages/main/Success";
+import Cancel from "../pages/main/Cancel";
 
 import ProtectedRoute from "./ProtectedRoute";
 import { useProfile } from "../hooks/useProfile";
 import Layout from "../components/layout/Layout";
+
 
 export default function AppRoutes() {
     const { data, isLoading } = useProfile();
@@ -41,6 +44,25 @@ export default function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <LiveRoom />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* STRIPE ROUTES */}
+            <Route
+                path="/wallet/success"
+                element={
+                    <ProtectedRoute>
+                        <Success />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/wallet/cancel"
+                element={
+                    <ProtectedRoute>
+                        <Cancel />
                     </ProtectedRoute>
                 }
             />
