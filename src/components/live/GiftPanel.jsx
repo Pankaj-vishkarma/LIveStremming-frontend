@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { getGifts, sendGift } from "../../api/gifts";
+import { getGifts } from "../../api/gifts";
 import { useSendGift } from "../../hooks/useSendGift";
+import { useNavigate } from "react-router-dom";
 
 export default function GiftPanel({ isOpen, onClose, username }) {
     const [gifts, setGifts] = useState([]);
     const [selectedGift, setSelectedGift] = useState(null);
-    const [loading, setLoading] = useState(false);
     const { mutate: sendGiftMutation, isPending } = useSendGift();
+    const navigate = useNavigate();
+
+    // NEW STATE
+    const [errorMsg, setErrorMsg] = useState("");
 
     // Fetch gifts
     useEffect(() => {
@@ -24,29 +28,65 @@ export default function GiftPanel({ isOpen, onClose, username }) {
         fetchGifts();
     }, [isOpen]);
 
+    //  ERROR LISTENER 
+    useEffect(() => {
+        const handleError = (e) => {
+            const { message, code } = e.detail;
+
+            if (code === "INSUFFICIENT_BALANCE") {
+
+                // premium popup
+                setErrorMsg(message);
+
+                setTimeout(() => {
+                    setErrorMsg("");
+                    navigate("/wallet");
+                }, 1500);
+            }
+        };
+
+        window.addEventListener("gift:error", handleError);
+
+        return () => {
+            window.removeEventListener("gift:error", handleError);
+        };
+    }, [navigate]);
+
     // Send gift
     const handleSend = () => {
         if (!selectedGift) return;
 
-        sendGiftMutation({
-            username,
-            giftId: selectedGift._id,
-            gift: selectedGift,
-        });
+        sendGiftMutation(
+            {
+                username,
+                giftId: selectedGift._id,
+                gift: selectedGift,
+            },
+            {
+                onSuccess: () => {
+                    window.dispatchEvent(
+                        new CustomEvent("gift:local", {
+                            detail: selectedGift,
+                        })
+                    );
 
-        // animation (same)
-        window.dispatchEvent(
-            new CustomEvent("gift:local", {
-                detail: selectedGift,
-            })
+                    setSelectedGift(null);
+                    onClose();
+                },
+            }
         );
-
-        setSelectedGift(null);
-        onClose();
     };
 
     return (
         <>
+            {/* 🔥 PREMIUM POPUP */}
+            {errorMsg && (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] bg-[#1a1a1a] border border-red-500 text-white px-4 py-2 rounded-full shadow-lg text-xs flex items-center gap-2 animate-[fadeIn_0.3s_ease]">
+                    <span className="text-red-500">●</span>
+                    {errorMsg}
+                </div>
+            )}
+
             {/* BACKDROP */}
             <div
                 onClick={onClose}
@@ -61,24 +101,15 @@ export default function GiftPanel({ isOpen, onClose, username }) {
             >
                 <div className="w-full max-w-[412px] bg-[#0e0f0b] rounded-t-[24px] px-4 pt-3 pb-5 shadow-xl">
 
-                    {/* DRAG HANDLE */}
                     <div className="flex justify-center mb-3">
                         <div className="w-10 h-1 bg-gray-600 rounded-full" />
                     </div>
 
-                    {/* HEADER */}
                     <div className="flex justify-between items-center mb-3">
                         <h2 className="text-white text-sm font-semibold">Send Gift</h2>
-
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 text-xs"
-                        >
-                            ✕
-                        </button>
+                        <button onClick={onClose} className="text-gray-400 text-xs">✕</button>
                     </div>
 
-                    {/* GIFT GRID */}
                     <div className="grid grid-cols-4 gap-3 mb-4">
                         {gifts.map((gift) => (
                             <div
@@ -90,22 +121,13 @@ export default function GiftPanel({ isOpen, onClose, username }) {
                                         : "bg-[#1a1a1a]"
                                     }`}
                             >
-                                <img
-                                    src={gift.icon}
-                                    alt={gift.name}
-                                    className="w-10 h-10 object-contain mb-1"
-                                />
-
+                                <img src={gift.icon} alt={gift.name} className="w-10 h-10 object-contain mb-1" />
                                 <p className="text-[10px] text-white">{gift.name}</p>
-
-                                <p className="text-[9px] text-gray-400">
-                                    {gift.coin_value} coins
-                                </p>
+                                <p className="text-[9px] text-gray-400">{gift.coin_value} coins</p>
                             </div>
                         ))}
                     </div>
 
-                    {/* SEND BUTTON */}
                     <button
                         onClick={handleSend}
                         disabled={!selectedGift || isPending}

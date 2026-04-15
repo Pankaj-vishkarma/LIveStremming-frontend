@@ -29,9 +29,22 @@ export const useSendGift = () => {
         },
 
         // rollback
-        onError: (err, _, context) => {
+        onError: (err, variables, context) => {
             if (context?.previousWallet) {
                 queryClient.setQueryData(["wallet"], context.previousWallet);
+            }
+
+            console.log("FINAL ERROR FRONTEND:", err); // 👈 debug
+
+            if (err?.code === "INSUFFICIENT_BALANCE") {
+                window.dispatchEvent(
+                    new CustomEvent("gift:error", {
+                        detail: {
+                            message: err.message,
+                            code: err.code,
+                        },
+                    })
+                );
             }
         },
 

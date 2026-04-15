@@ -1,18 +1,30 @@
 import axiosInstance from "./axios";
 
-//  Get all gifts (NO CHANGE)
+//  Get all gifts
 export const getGifts = async () => {
   const res = await axiosInstance.get("/gifts");
   console.log("Gifts fetched:", res.data);
   return res.data;
 };
 
-// Send gift (NO CHANGE)
+// Send gift
 export const sendGift = async (username, giftId) => {
-  const res = await axiosInstance.post(`/gifts/send/${username}`, {
-    gift_id: giftId,
-  });
-  return res.data;
+  try {
+    const res = await axiosInstance.post(`/gifts/send/${username}`, {
+      gift_id: giftId,
+    });
+    return res.data;
+  } catch (error) {
+    console.log("FULL AXIOS ERROR:", error);
+
+    // HANDLE BOTH CASES
+    const errData = error.response?.data || error;
+
+    throw {
+      message: errData.message || "Something went wrong",
+      code: errData.code || "INSUFFICIENT_BALANCE", 
+    };
+  }
 };
 
 //  Admin - Create Gift
