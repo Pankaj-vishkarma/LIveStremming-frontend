@@ -1,4 +1,4 @@
-# Voxylive Frontend
+# LiveStremming Frontend
 
 This project is a frontend implementation of the Voxylive application built using React and Tailwind CSS. The UI is developed based on the provided Figma design with a mobile-first approach.
 
