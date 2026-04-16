@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { useFeed } from "../../hooks/useFeed"
 import { useSocket } from "../../hooks/useSocket";
+import StreamerCard from "../../components/streamer/StreamerCard";
 
 
 const tabs = ["For you", "Trending", "Most View", "Nearby"]
@@ -16,8 +17,6 @@ const getImageUrl = (photo) => {
 };
 
 export default function Feed() {
-
-
 
     const [activeTab, setActiveTab] = useState("For you")
     const [showDropdown, setShowDropdown] = useState(false)
@@ -150,7 +149,7 @@ export default function Feed() {
             <div className="w-full max-w-[412px] h-screen overflow-y-auto no-scrollbar px-3 sm:px-4 pt-4 pb-24 sm:pb-28 space-y-4 sm:space-y-5">
 
                 {/* TABS */}
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pr-2">
+                <div className="flex justify-center items-center gap-2 overflow-x-auto no-scrollbar pr-2">
 
                     {tabs.map((tab) => (
                         <button
@@ -164,36 +163,6 @@ export default function Feed() {
                             {tab}
                         </button>
                     ))}
-
-                    {/* DROPDOWN */}
-                    <div className="relative flex-shrink-0">
-
-                        <button
-                            onClick={() => setShowDropdown(!showDropdown)}
-                            className="px-3 py-1.5 rounded-full text-[11px] sm:text-xs bg-[#1a1a1a] flex items-center gap-1 whitespace-nowrap"
-                        >
-                            {selectedGlobal} ▼
-                        </button>
-
-                        {showDropdown && (
-                            <div className="absolute top-9 right-0 bg-[#1a1a1a] rounded-lg p-2 space-y-1 z-50 w-28 shadow-lg">
-
-                                {dropdownOptions.map((item) => (
-                                    <div
-                                        key={item}
-                                        onClick={() => {
-                                            setSelectedGlobal(item)
-                                            setShowDropdown(false)
-                                        }}
-                                        className="px-2 py-1 text-xs hover:bg-[#2a2a2a] rounded cursor-pointer"
-                                    >
-                                        {item}
-                                    </div>
-                                ))}
-
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 {/* EMPTY STATE */}
@@ -207,51 +176,9 @@ export default function Feed() {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
 
                     {liveStreamers.map((item, i) => (
-                        <div
-                            key={item.username + i}
-                            onClick={() => navigate(`/live/${item.channel_name}`)}
-                            className="relative rounded-[18px] sm:rounded-[22px] overflow-hidden cursor-pointer"
-                        >
-
-                            <img
-                                src={item.image}
-                                className="w-full aspect-[3/4] object-cover"
-                            />
-
-                            <div className="absolute top-2 right-2">
-                                <span className="bg-red-500 text-white text-[9px] px-2 py-[2px] rounded-full">
-                                    LIVE
-                                </span>
-                            </div>
-
-                            <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/30 backdrop-blur-[6px] px-2 py-[3px] rounded-full text-[9px]">
-                                <img src="/eye.png" className="w-3 h-3" />
-                                <span className="text-white">{item.views}</span>
-                            </div>
-
-                            <div className="absolute bottom-0 left-0 right-0 px-2 pb-2 pt-6 bg-gradient-to-t from-black/80 to-transparent">
-
-                                <div className="flex items-center gap-2 bg-[#00000042] px-[7px] py-[7px] rounded-[23px]">
-                                    <img
-                                        src={item.avatar}
-                                        className="w-5 h-5 rounded-full object-cover"
-                                    />
-
-                                    <div>
-                                        <p className="text-[11px] text-white font-medium">
-                                            {item.name}
-                                        </p>
-
-                                        <p className="text-[9px] text-gray-400">
-                                            {item.likes}
-                                        </p>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                        </div>
+                        <StreamerCard key={item.username + i} item={item} />
                     ))}
+
                 </div>
 
                 <div ref={loadMoreRef} className="h-5" />

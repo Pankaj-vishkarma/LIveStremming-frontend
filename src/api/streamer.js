@@ -33,3 +33,8 @@ export const updateStreamerProfile = async (data) => {
     const res = await axios.put("/streamer/profile", data);
     return res;
 };
+
+export const getStreamerProfile = async (username) => {
+    const res = await axios.get(`/streamer/${username}`);
+    return res;
+};

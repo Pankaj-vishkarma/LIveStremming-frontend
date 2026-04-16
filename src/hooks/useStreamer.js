@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { applyStreamer, getStreamerStatus, getStreamerMe, updateStreamerProfile } from "../api/streamer";
+import { applyStreamer, getStreamerStatus, getStreamerMe, updateStreamerProfile, getStreamerProfile } from "../api/streamer";
 
 // Get Status
 export const useStreamerStatus = () => {
@@ -56,5 +56,19 @@ export const useUpdateStreamerProfile = () => {
         onError: (error) => {
             console.error("STREAMER UPDATE ERROR:", error);
         },
+    });
+};
+
+// ==============================
+// GET STREAMER PROFILE (PUBLIC)
+// ==============================
+export const useStreamerProfile = (username) => {
+    return useQuery({
+        queryKey: ["streamer-profile", username],
+        queryFn: async () => {
+            const res = await getStreamerProfile(username);
+            return res.data;
+        },
+        enabled: !!username,
     });
 };

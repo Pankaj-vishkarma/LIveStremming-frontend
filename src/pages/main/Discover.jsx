@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { useFeed } from "../../hooks/useFeed"
+import StreamerCard from "../../components/streamer/StreamerCard";
 
 const tabs = ["For you", "Trending", "Most View", "Nearby"]
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -15,7 +16,6 @@ export default function Feed() {
     const [searchTerm, setSearchTerm] = useState("")
 
     const navigate = useNavigate();
-
 
     const {
         data,
@@ -45,6 +45,7 @@ export default function Feed() {
             avatar: imageUrl,
             name: item?.channel_name || "Unknown",
             username: item?.username,
+            channel_name: item?.channel_name,
             is_live: item?.is_live,
             views: item?.is_live ? "Live" : "0",
             likes: "0",
@@ -92,66 +93,11 @@ export default function Feed() {
                     />
                 </div>
 
-
-
                 {/* GRID */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
 
                     {feedList.map((item, i) => (
-                        <div
-                            key={item.name + i}
-                            onClick={() => {
-                                if (item.is_live && item.username) {
-                                    navigate(`/live/${item.username}`);
-                                }
-                            }}
-                            className={`relative rounded-[18px] sm:rounded-[22px] overflow-hidden 
-                            ${item.is_live ? "cursor-pointer" : "cursor-not-allowed opacity-80"}`}
-                        >
-
-                            <img
-                                src={item.image}
-                                className="w-full aspect-[3/4] object-cover"
-                            />
-
-                            <div className="absolute top-2 right-2">
-                                {item.is_live ? (
-                                    <span className="bg-red-500 text-white text-[9px] px-2 py-[2px] rounded-full">
-                                        LIVE
-                                    </span>
-                                ) : (
-                                    <span className="bg-gray-600 text-white text-[9px] px-2 py-[2px] rounded-full">
-                                        OFFLINE
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/30 backdrop-blur-[6px] px-2 py-[3px] sm:py-[4px] rounded-full text-[9px] sm:text-[10px]">
-                                <img src="/eye.png" className="w-3 h-3" />
-                                <span className="text-white">{item.views}</span>
-                            </div>
-
-                            <div className="absolute bottom-0 left-0 right-0 px-2 sm:px-3 pb-2 sm:pb-3 pt-6 sm:pt-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
-
-                                <div className="flex items-center gap-2 bg-[#00000042] px-[7px] py-[7px] rounded-[23px]">
-                                    <img
-                                        src={item.avatar}
-                                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover"
-                                    />
-
-                                    <div className="leading-tight">
-                                        <p className="text-[11px] sm:text-[12px] text-white font-medium">
-                                            {item.name}
-                                        </p>
-
-                                        <p className="text-[9px] sm:text-[10px] text-gray-400">
-                                            {item.likes}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
+                        <StreamerCard key={item.username + i} item={item} />
                     ))}
                 </div>
 

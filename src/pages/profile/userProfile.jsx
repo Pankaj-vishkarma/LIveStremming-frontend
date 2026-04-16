@@ -251,21 +251,6 @@ const UserProfile = () => {
                         )}
                     </div>
 
-                    <div className="flex justify-between text-center">
-                        <div>
-                            <p className="text-sm font-semibold text-white">120</p>
-                            <p className="text-xs text-gray-400">Followers</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-semibold text-white">80</p>
-                            <p className="text-xs text-gray-400">Following</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-semibold text-white">0</p>
-                            <p className="text-xs text-gray-400">Coins</p>
-                        </div>
-                    </div>
-
                     <div className="flex gap-2 sm:gap-3">
                         {isEditing ? (
                             <>

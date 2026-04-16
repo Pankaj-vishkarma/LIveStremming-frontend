@@ -8,6 +8,7 @@ import Discover from "../pages/main/Discover";
 import Wallet from "../pages/main/Wallet";
 import Success from "../pages/main/Success";
 import Cancel from "../pages/main/Cancel";
+import ViewStreamer from "../pages/profile/ViewStreamer";
 
 import ProtectedRoute from "./ProtectedRoute";
 import { useProfile } from "../hooks/useProfile";
@@ -80,6 +81,7 @@ export default function AppRoutes() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/wallet" element={<Wallet />} />
+                <Route path="/profile/:username" element={<ViewStreamer />} />
             </Route>
 
         </Routes>

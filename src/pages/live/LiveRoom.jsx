@@ -18,9 +18,11 @@ import { useLiveChat } from "../../hooks/useLiveChat";
 import { ParticipantTile, useTracks } from "@livekit/components-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Track } from "livekit-client";
+import useFollow from "../../hooks/useFollow";
 
 export default function LiveRoom() {
     const { username } = useParams();
+    const { isFollowing, toggleFollow, loading: followLoading } = useFollow(username);
     console.log("LiveRoom params:", username);
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
@@ -291,12 +293,37 @@ export default function LiveRoom() {
 
                 {/* STREAM INFO */}
                 <div className="absolute bottom-[80px] right-3 z-50">
-                    <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-full flex items-center gap-2">
-                        <img
-                            src="/avatar1.png"
-                            className="w-7 h-7 rounded-full"
-                        />
-                        <span className="text-white text-sm">{username}</span>
+                    <div className="bg-black/60 backdrop-blur px-3 py-2 rounded-full flex items-center gap-2 justify-between min-w-[160px]">
+
+                        <div className="flex items-center gap-2">
+                            <img
+                                src="/avatar1.png"
+                                className="w-7 h-7 rounded-full"
+                            />
+                            <span
+                                onClick={() => navigate(`/profile/${username}`)}
+                                className="text-white text-sm cursor-pointer"
+                            >
+                                {username}
+                            </span>
+                        </div>
+
+                        {user?._id !== username && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFollow();
+                                }}
+                                disabled={followLoading}
+                                className={`text-[10px] px-2 py-[3px] rounded-full ${isFollowing
+                                    ? "bg-gray-500 text-white"
+                                    : "bg-[#e98834] text-black"
+                                    }`}
+                            >
+                                {followLoading ? "..." : isFollowing ? "Following" : "Follow"}
+                            </button>
+                        )}
+
                     </div>
                 </div>
 

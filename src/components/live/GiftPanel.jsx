@@ -79,7 +79,7 @@ export default function GiftPanel({ isOpen, onClose, username }) {
 
     return (
         <>
-            {/* 🔥 PREMIUM POPUP */}
+            {/* PREMIUM POPUP */}
             {errorMsg && (
                 <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[999] bg-[#1a1a1a] border border-red-500 text-white px-4 py-2 rounded-full shadow-lg text-xs flex items-center gap-2 animate-[fadeIn_0.3s_ease]">
                     <span className="text-red-500">●</span>
