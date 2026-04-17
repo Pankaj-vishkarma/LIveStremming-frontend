@@ -15,7 +15,6 @@ export default function App() {
     queryKey: ["profile"],
     queryFn: getProfile,
     retry: false,
-    enabled: isAuth, // only run when user logged in
     refetchOnWindowFocus: false, // optional (avoid extra calls)
   });
 
