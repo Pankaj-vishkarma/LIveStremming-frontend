@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import useFollow from "../../hooks/useFollow";
 import { useProfile } from "../../hooks/useProfile";
 import { useStreamerProfile } from "../../hooks/useStreamer";
+import { useNavigate } from "react-router-dom";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -14,6 +15,7 @@ const getImageUrl = (photo) => {
 
 export default function ViewStreamer() {
     const { username } = useParams();
+    const navigate = useNavigate();
 
     const { data: myProfile } = useProfile();
 
@@ -77,13 +79,15 @@ export default function ViewStreamer() {
                 </div>
 
                 {!isSelf && (
-                    <div className="flex justify-center">
+                    <div className="flex justify-center gap-3">
+
+                        {/* FOLLOW BUTTON */}
                         <button
                             onClick={toggleFollow}
                             disabled={followLoading}
                             className={`px-5 py-[6px] rounded-full text-[12px] font-medium transition ${isFollowing
-                                    ? "bg-gray-500 text-white"
-                                    : "bg-[#e98834] text-black"
+                                ? "bg-gray-500 text-white"
+                                : "bg-[#e98834] text-black"
                                 }`}
                         >
                             {followLoading
@@ -92,6 +96,16 @@ export default function ViewStreamer() {
                                     ? "Following"
                                     : "Follow"}
                         </button>
+
+                        {/* MESSAGE BUTTON */}
+                        <button
+                            onClick={() => navigate(`/chat/${profile?.username}`)}
+                            disabled={!profile?.username}
+                            className="px-5 py-[6px] rounded-full text-[12px] font-medium bg-[#1a1a1a] text-white disabled:opacity-50"
+                        >
+                            Message
+                        </button>
+
                     </div>
                 )}
 

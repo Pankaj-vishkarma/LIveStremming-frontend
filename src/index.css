@@ -62,7 +62,20 @@ video.lk-participant-media-video {
     overflow-y: hidden;
 }
 
-.lk-grid-layout > .lk-participant-tile:nth-child(2) {
-  /* custom styling */
-  display: none; /* example: hide the second tile */
+.lk-grid-layout>.lk-participant-tile:nth-child(2) {
+    /* custom styling */
+    display: none;
+    /* example: hide the second tile */
+}
+
+/* Hide scrollbar for all browsers */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE & Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }

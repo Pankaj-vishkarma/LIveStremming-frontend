@@ -13,6 +13,7 @@ import ViewStreamer from "../pages/profile/ViewStreamer";
 import ProtectedRoute from "./ProtectedRoute";
 import { useProfile } from "../hooks/useProfile";
 import Layout from "../components/layout/Layout";
+import Chat from "../pages/main/Chat";
 
 
 export default function AppRoutes() {
@@ -82,6 +83,7 @@ export default function AppRoutes() {
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/profile/:username" element={<ViewStreamer />} />
+                <Route path="/chat/:username" element={<Chat />} />
             </Route>
 
         </Routes>

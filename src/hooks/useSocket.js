@@ -9,10 +9,7 @@ export const useSocket = () => {
         setSocket(s);
 
         return () => {
-
-            if (s) {
-                s.off(); // removes all listeners attached from this component
-            }
+            // no global off()
         };
     }, []);
 
