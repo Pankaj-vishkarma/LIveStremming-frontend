@@ -55,7 +55,7 @@ export default function Feed() {
             likes: "0",
         }));
 
-        // ✅ merge instead of overwrite
+        // merge instead of overwrite
         setLiveStreamers((prev) => {
             const live = mapped.filter((item) => item.is_live);
 
