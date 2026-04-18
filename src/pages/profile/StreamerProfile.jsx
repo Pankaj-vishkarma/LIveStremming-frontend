@@ -8,10 +8,12 @@ import { useUpdateProfile } from "../../hooks/useProfile";
 import { useFollowStats } from "../../hooks/useFollowStats";
 
 import { startLive, endLive } from "../../api/liveApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 const StreamerProfile = () => {
     const navigate = useNavigate();
     const fileRef = useRef();
+    const queryClient = useQueryClient();
 
     const { data, isLoading } = useStreamerMe();
     const {
@@ -42,6 +44,7 @@ const StreamerProfile = () => {
     const [showFollowersModal, setShowFollowersModal] = useState(false);
     const [showFollowingModal, setShowFollowingModal] = useState(false);
     const [selectedUserImage, setSelectedUserImage] = useState(null);
+    const [isLiveLocal, setIsLiveLocal] = useState(null);
 
     useEffect(() => {
         if (data) {
@@ -66,6 +69,12 @@ const StreamerProfile = () => {
             }
         };
     }, [previewImage]);
+
+    useEffect(() => {
+        if (data?.is_live !== undefined) {
+            setIsLiveLocal(data.is_live);
+        }
+    }, [data]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -149,18 +158,38 @@ const StreamerProfile = () => {
     const handleGoLive = async () => {
         try {
             setLiveLoading(true);
+
+            setIsLiveLocal(true);
+
             await startLive();
+
+            queryClient.invalidateQueries({ queryKey: ["streamer-me"] });
+
             navigate(`/live/${data.channel_name}`);
-            console.log("CHANNEL:", data.channel_name);
+        } catch (err) {
+            // rollback if fail
+            setIsLiveLocal(false);
         } finally {
             setLiveLoading(false);
         }
     };
 
     const handleEndLive = async () => {
-        setLiveLoading(true);
-        await endLive();
-        setLiveLoading(false);
+        try {
+            setLiveLoading(true);
+
+            setIsLiveLocal(false);
+
+            await endLive();
+
+            queryClient.invalidateQueries({ queryKey: ["streamer-me"] });
+
+        } catch (err) {
+            // rollback if fail
+            setIsLiveLocal(true);
+        } finally {
+            setLiveLoading(false);
+        }
     };
 
     // LOGOUT
@@ -384,7 +413,7 @@ const StreamerProfile = () => {
                             Live Controls
                         </h3>
 
-                        {!data?.is_live ? (
+                        {!isLiveLocal ? (
                             <button
                                 onClick={handleGoLive}
                                 className="w-full bg-red-500 py-2 rounded"
