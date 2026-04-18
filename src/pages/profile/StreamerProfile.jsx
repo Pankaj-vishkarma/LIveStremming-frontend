@@ -167,6 +167,11 @@ const StreamerProfile = () => {
     const handleLogout = () => {
         logout(undefined, {
             onSuccess: () => {
+
+                // IMPORTANT: onboarding state clear karo
+                localStorage.removeItem("onboarding_step");
+                localStorage.removeItem("onboarding_data");
+
                 dispatch({ type: "auth/logout" });
 
                 navigate("/", { replace: true });

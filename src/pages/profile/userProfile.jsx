@@ -158,6 +158,10 @@ const UserProfile = () => {
     const handleLogout = () => {
         logout(undefined, {
             onSuccess: () => {
+                // CLEAR ONBOARDING STATE (IMPORTANT)
+                localStorage.removeItem("onboarding_step");
+                localStorage.removeItem("onboarding_data");
+
                 dispatch({ type: "auth/logout" });
 
                 navigate("/", { replace: true });
