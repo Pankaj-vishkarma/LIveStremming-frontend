@@ -56,6 +56,11 @@ export default function Profile({ onFinish }) {
                 return;
             }
 
+            if (!image) {
+                setError("Profile image is required");
+                return;
+            }
+
             let uploadRes = null;
 
             // upload image (Cloudinary)

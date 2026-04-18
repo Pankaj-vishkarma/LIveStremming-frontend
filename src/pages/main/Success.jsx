@@ -1,10 +1,31 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../api/axios";
 
 export default function Success() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        const confirmPayment = async () => {
+            try {
+                const params = new URLSearchParams(window.location.search);
+
+                const transaction_id = params.get("transaction_id");
+                const amount = params.get("amount");
+
+                if (transaction_id && amount) {
+                    await axiosInstance.post("/wallet/confirm-topup", {
+                        transaction_id,
+                        amount: Number(amount),
+                    });
+                }
+            } catch (err) {
+                console.error("Confirm payment failed:", err);
+            }
+        };
+
+        confirmPayment();
+
         const timer = setTimeout(() => {
             navigate("/wallet");
         }, 3000);
