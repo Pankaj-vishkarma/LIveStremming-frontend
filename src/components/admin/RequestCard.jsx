@@ -2,16 +2,22 @@ export default function RequestCard({ item, onApprove, onReject, isApprovedSecti
     return (
         <div className="bg-[#1a1a1a] rounded-[18px] p-3 flex items-center justify-between">
 
+            {console.log("Rendering RequestCard for item:", item)}
+
             {/* LEFT */}
             <div className="flex items-center gap-2">
                 <img
-                    src={item?.user?.display_photo || "/avatar1.png"}
+                    src={
+                        item?.user?.display_photo ||
+                        item?.display_photo ||
+                        "/avatar1.png"
+                    }
                     className="w-8 h-8 rounded-full object-cover"
                 />
 
                 <div>
                     <p className="text-[12px] text-white">
-                        {item?.user?.username}
+                        {item?.user?.username || item?.username || item?.channel_name || "Unknown"}
                     </p>
                     <p className="text-[10px] text-gray-400">
                         {item?.request_status}

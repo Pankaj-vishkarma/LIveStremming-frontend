@@ -19,7 +19,9 @@ export const useRejectStreamer = () => {
 
     return useMutation({
         mutationFn: (id) =>
-            api.patch(`/admin/streamer/requests/${id}/reject`),
+            api.put(`/admin/streamer/requests/${id}/reject`, {
+                reason: "Rejected by admin",
+            }),
 
         onSuccess: () => {
             queryClient.invalidateQueries(["admin-requests"]);
