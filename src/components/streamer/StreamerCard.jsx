@@ -38,18 +38,21 @@ export default function StreamerCard({ item }) {
             />
 
             {/* LIVE BADGE */}
-            {item.is_live && (
-                <div className="absolute top-2 right-2">
-                    <span className="bg-red-500 text-white text-[9px] px-2 py-[2px] rounded-full">
-                        LIVE
-                    </span>
-                </div>
-            )}
+            <div className="absolute top-2 right-2">
+                <span
+                    className={`text-white text-[9px] px-2 py-[2px] rounded-full ${item.is_live ? "bg-red-500" : "bg-gray-500"
+                        }`}
+                >
+                    {item.is_live ? "LIVE" : "OFFLINE"}
+                </span>
+            </div>
 
             {/* VIEW COUNT */}
             <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/30 backdrop-blur-[6px] px-2 py-[3px] rounded-full text-[9px]">
                 <img src="/eye.png" className="w-3 h-3" />
-                <span className="text-white">{item.views}</span>
+                <span className="text-white">
+                    {item.is_live ? item.views : 0}
+                </span>
             </div>
 
             {/* BOTTOM OVERLAY */}
@@ -89,8 +92,8 @@ export default function StreamerCard({ item }) {
                         }}
                         disabled={loading}
                         className={`text-[9px] px-2 py-[3px] rounded-full transition ${isFollowing
-                                ? "bg-gray-500 text-white"
-                                : "bg-[#e98834] text-black"
+                            ? "bg-gray-500 text-white"
+                            : "bg-[#e98834] text-black"
                             }`}
                     >
                         {loading

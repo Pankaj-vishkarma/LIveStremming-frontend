@@ -102,8 +102,18 @@ export default function Email({ next, prev }) {
                                 type="email"
                                 value={email}
                                 onChange={(e) => {
-                                    setEmail(e.target.value);
-                                    setError("");
+                                    const value = e.target.value;
+                                    setEmail(value);
+
+                                    const trimmed = value.trim();
+
+                                    if (!trimmed) {
+                                        setError("");
+                                    } else if (!validateEmail(trimmed)) {
+                                        setError("Please enter a valid email");
+                                    } else {
+                                        setError("");
+                                    }
                                 }}
                                 placeholder="youremail@example.com"
                                 className="flex-1 bg-transparent outline-none text-[13px] sm:text-[14px] text-white font-inter placeholder:text-gray-400"
@@ -130,7 +140,10 @@ export default function Email({ next, prev }) {
                         <button
                             onClick={handleContinue}
                             disabled={loading || !isValidEmail}
-                            className="w-full h-[45px] sm:h-[50px] bg-[#e98834] rounded-full flex items-center justify-center"
+                            className={`w-full h-[45px] sm:h-[50px] rounded-full flex items-center justify-center transition-all duration-200 ${loading || !isValidEmail
+                                    ? "bg-[#e98834]/50 cursor-not-allowed"
+                                    : "bg-[#e98834] cursor-pointer"
+                                }`}
                         >
                             <span className="text-[13px] sm:text-[14px] font-semibold text-[#04080b]">
                                 {loading ? "Sending..." : "Continue"}
