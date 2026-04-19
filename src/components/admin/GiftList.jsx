@@ -14,7 +14,7 @@ const GiftList = ({ gifts, onEdit, onDelete }) => {
 
                         <div>
                             <p className="text-white text-sm">{gift.name}</p>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-white text-xs">
                                 {gift.coin_value} coins
                             </p>
                         </div>
