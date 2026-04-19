@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import UserProfile from "../profile/userProfile";
 import StreamerProfile from "../profile/StreamerProfile";
-import AdminProfile from "../profile/AdminProfile";
+//import AdminProfile from "../profile/AdminProfile";
 
 export default function Profile() {
     const { user, isAuthChecked } = useSelector((state) => state.auth);
@@ -19,10 +19,10 @@ export default function Profile() {
         );
     }
 
-    // Admin
-    if (user.role === "admin") {
-        return <AdminProfile />;
-    }
+    /* // Admin
+     if (user.role === "admin") {
+         return <AdminProfile />;
+     }*/
 
     // Streamer
     if (user.role === "streamer") {

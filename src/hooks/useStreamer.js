@@ -18,7 +18,7 @@ export const useApplyStreamer = () => {
 
         onSuccess: () => {
             // refetch status after apply
-            queryClient.invalidateQueries(["streamer-status"]);
+            queryClient.invalidateQueries({ queryKey: ["streamer-status"] });
         },
     });
 };

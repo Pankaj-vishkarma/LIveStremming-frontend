@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
+import { useAdminProfile } from "../hooks/useAdmin";
 
 const ProtectedRoute = ({ children }) => {
     const queryClient = useQueryClient();
@@ -11,8 +12,11 @@ const ProtectedRoute = ({ children }) => {
     // Redux state
     const { isAuthChecked } = useSelector((state) => state.auth);
 
-    // wait for auth check
-    if (!isAuthChecked) {
+    // ADMIN CHECK
+    const { data: admin, isFetched: adminFetched } = useAdminProfile();
+
+    // wait for auth check OR admin check
+    if (!isAuthChecked || !adminFetched) {
         return (
             <div className="w-full min-h-screen bg-[#0e0f0b] flex justify-center">
                 <div className="w-full max-w-[412px] h-screen overflow-y-auto px-3 sm:px-4 pt-4 pb-24 space-y-4">
@@ -56,7 +60,12 @@ const ProtectedRoute = ({ children }) => {
         );
     }
 
+    // ADMIN BLOCK
+    if (admin?.data) {
+        return <Navigate to="/admin/dashboard" replace />;
+    }
 
+    // USER AUTH CHECK
     if (!cachedUser) {
         return <Navigate to="/" replace />;
     }

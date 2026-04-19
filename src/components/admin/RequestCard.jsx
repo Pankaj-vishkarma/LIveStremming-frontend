@@ -19,7 +19,7 @@ export default function RequestCard({ item, onApprove, onReject, isApprovedSecti
                     <p className="text-[12px] text-white">
                         {item?.user?.username || item?.username || item?.channel_name || "Unknown"}
                     </p>
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-white">
                         {item?.request_status}
                     </p>
                 </div>
@@ -34,7 +34,7 @@ export default function RequestCard({ item, onApprove, onReject, isApprovedSecti
                     className={`px-3 py-1 rounded-full text-[10px] font-medium
                         ${item.request_status === "pending"
                             ? "bg-green-500 text-black"
-                            : "bg-gray-500 text-black cursor-not-allowed"
+                            : "bg-gray-500 text-white cursor-not-allowed"
                         }`}
                 >
                     {item.request_status === "approved" ? "Approved" : "Accept"}

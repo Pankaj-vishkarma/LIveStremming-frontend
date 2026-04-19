@@ -14,6 +14,9 @@ import ProtectedRoute from "./ProtectedRoute";
 import { useProfile } from "../hooks/useProfile";
 import Layout from "../components/layout/Layout";
 import Chat from "../pages/main/Chat";
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminProtectedRoute from "./AdminProtectedRoute";
 
 
 export default function AppRoutes() {
@@ -85,6 +88,17 @@ export default function AppRoutes() {
                 <Route path="/profile/:username" element={<ViewStreamer />} />
                 <Route path="/chat/:username" element={<Chat />} />
             </Route>
+
+            <Route path="/admin/login" element={<AdminLogin />} />
+
+            <Route
+                path="/admin/dashboard"
+                element={
+                    <AdminProtectedRoute>
+                        <AdminDashboard />
+                    </AdminProtectedRoute>
+                }
+            />
 
         </Routes>
     );
