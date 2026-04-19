@@ -10,7 +10,14 @@ export const useLogout = () => {
         },
 
         onSuccess: () => {
+            // clear user profile
             queryClient.setQueryData(["profile"], null);
+
+
+            queryClient.removeQueries({ queryKey: ["admin-profile"] });
+
+
+            queryClient.removeQueries({ queryKey: ["streamer-status"] });
         },
     });
 };
